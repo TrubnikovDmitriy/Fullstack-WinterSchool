@@ -13,9 +13,10 @@ func InitRouter() *fasthttprouter.Router {
 
 	// team
 	router.GET("/v1/team/:id", handlers.GetTeam)
+	router.GET("/v1/team/:id/players", handlers.GetTeamPlayers)
 
 	// player
-	router.GET("/v1/player/:id", handlers.GetPlayer)
+	router.GET("/v1/player/:id", handlers.GetPlayer)	
 
 	return router
 }
