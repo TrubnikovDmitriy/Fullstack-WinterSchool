@@ -2,27 +2,28 @@ package database
 
 import (
 	"../models"
+	"../errors"
 	"log"
 )
 
-func GetPlayerByID(id string) *models.Player {
+func GetPlayerByID(id string) (*models.Player, *errors.ErrorCode) {
 
-	const SelectPlayerByID =
+	const selectPlayerByID =
 		"SELECT id, first_name, last_name, about FROM players WHERE id = $1;"
 
 	player := models.Player{}
 
-	err := conn.QueryRow(SelectPlayerByID, id).
+	err := conn.QueryRow(selectPlayerByID, id).
 		Scan(&player.ID, &player.FirstName, &player.LastName, &player.About)
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, checkError(err)
 	}
 
-	return &player
+	return &player, nil
 }
 
-func GetPlayersOfTeam(id string) ([]*models.Player, error) {
+func GetPlayersOfTeam(id string) ([]*models.Player, errors.ErrorCode) {
 
 	const getPlayersByTeamID =
 		"SELECT team_id, id, first_name, last_name FROM players WHERE team_id = $1;"
@@ -41,5 +42,5 @@ func GetPlayersOfTeam(id string) ([]*models.Player, error) {
 		posts = append(posts, &post)
 	}
 
-	return posts, nil
+	return posts, errors.ErrorCode{}
 }

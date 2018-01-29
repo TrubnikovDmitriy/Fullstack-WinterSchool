@@ -12,3 +12,4 @@ func main() {
 	fasthttp.ListenAndServe(":5000", router.Handler)
 }
 
+// TODO проверка валидность query-параметров (например, что ID это действительно число)

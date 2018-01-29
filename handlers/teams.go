@@ -10,7 +10,12 @@ import (
 func GetTeam(ctx *fasthttp.RequestCtx) {
 
 	id := ctx.UserValue("id").(string)
-	team := database.GetTeamByID(id)
+	team, err := database.GetTeamByID(id)
+
+	if err != nil {
+		ctx.SetStatusCode(err.Code)
+		return
+	}
 
 	ctx.SetStatusCode(200)
 	setHeaders(ctx)
