@@ -23,6 +23,9 @@ func init() {
 
 	// tournament
 	router.GET("/v1/tourney/:id", handlers.GetTournamentByID)
+
+	// game
+	router.GET("/v1/game/:id", handlers.GetGame)
 }
 
 func main() {
