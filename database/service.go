@@ -1,7 +1,7 @@
 package database
 
 import (
-	"../errors"
+	"../services"
 	"github.com/jackc/pgx"
 	"log"
 )
@@ -33,10 +33,10 @@ func init() {
 	}
 }
 
-func checkError(err error) *errors.ErrorCode {
+func checkError(err error) *services.ErrorCode {
 	if err == pgx.ErrNoRows {
-		return &errors.ErrorCode{404, "Not found"}
+		return &services.ErrorCode{404, "Not found"}
 	}
 	log.Print(err)
-	return &errors.ErrorCode{500, "Unexepcted error"}
+	return &services.ErrorCode{500, "Unexepcted error"}
 }

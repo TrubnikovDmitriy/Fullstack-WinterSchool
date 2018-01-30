@@ -2,11 +2,11 @@ package database
 
 import (
 	"../models"
-	"../errors"
+	"../services"
 )
 
 
-func GetTeamByID(id string) (*models.Team, *errors.ErrorCode) {
+func GetTeamByID(id string) (*models.Team, *services.ErrorCode) {
 
 	const SelectTeamByID = "SELECT id, team_name, about FROM teams WHERE id = $1;"
 

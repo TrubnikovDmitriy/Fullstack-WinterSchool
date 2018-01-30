@@ -2,11 +2,10 @@ package database
 
 import (
 	"../models"
-	"../errors"
-	"log"
+	"../services"
 )
 
-func GetPlayerByID(id string) (*models.Player, *errors.ErrorCode) {
+func GetPlayerByID(id string) (*models.Player, *services.ErrorCode) {
 
 	const selectPlayerByID =
 		"SELECT id, first_name, last_name, about FROM players WHERE id = $1;"
@@ -23,13 +22,13 @@ func GetPlayerByID(id string) (*models.Player, *errors.ErrorCode) {
 	return &player, nil
 }
 
-func GetPlayersOfTeam(id string) ([]*models.Player, errors.ErrorCode) {
+func GetPlayersOfTeam(id string) ([]*models.Player, *services.ErrorCode) {
 
 	const getPlayersByTeamID =
 		"SELECT team_id, id, first_name, last_name FROM players WHERE team_id = $1;"
 	rows, err := conn.Query(getPlayersByTeamID, id)
 	if err != nil {
-		log.Fatal(err)
+		return nil, checkError(err)
 	}
 
 	var posts []*models.Player
@@ -37,10 +36,10 @@ func GetPlayersOfTeam(id string) ([]*models.Player, errors.ErrorCode) {
 		post := models.Player{}
 		err = rows.Scan(&post.TeamID, &post.ID, &post.FirstName, &post.LastName)
 		if err != nil {
-			log.Fatal(err)
+			return nil, checkError(err)
 		}
 		posts = append(posts, &post)
 	}
 
-	return posts, errors.ErrorCode{}
+	return posts, nil
 }

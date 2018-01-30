@@ -2,10 +2,10 @@ package database
 
 import (
 	"../models"
-	"../errors"
+	"../services"
 )
 
-func GetMatchByID(id string) (*models.Match, *errors.ErrorCode) {
+func GetMatchByID(id string) (*models.Match, *services.ErrorCode) {
 
 	const getMatchByID =
 		"SELECT passed, id, first_team_id, second_team_id, first_team_score, second_team_score, " +

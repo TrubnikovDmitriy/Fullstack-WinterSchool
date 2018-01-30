@@ -1,4 +1,4 @@
-package errors
+package services
 
 type ErrorCode struct {
 	Code int
