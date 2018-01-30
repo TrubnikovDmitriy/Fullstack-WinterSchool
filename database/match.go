@@ -12,7 +12,7 @@ func GetMatchByID(id string) (*models.Match, *services.ErrorCode) {
 			"link, start_time, end_time FROM matches WHERE id = $1"
 	var match models.Match
 
-	row := conn.QueryRow(selectMatchByID, id)
+	row := master1.QueryRow(selectMatchByID, id)
 	err := row.Scan(&match.Passed, &match.ID, &match.FirstTeamID, &match.SecondTeamID,
 					&match.FirstTeamScore, &match.SecondTeamScore,
 					&match.Link, &match.StartTime, &match.EndTime)

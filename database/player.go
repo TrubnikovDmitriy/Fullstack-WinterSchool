@@ -12,7 +12,7 @@ func GetPlayerByID(id string) (*models.Player, *services.ErrorCode) {
 
 	player := models.Player{}
 
-	err := conn.QueryRow(selectPlayerByID, id).
+	err := master1.QueryRow(selectPlayerByID, id).
 		Scan(&player.ID, &player.FirstName, &player.LastName, &player.About)
 
 	if err != nil {
@@ -26,7 +26,7 @@ func GetPlayersOfTeam(id string) ([]*models.Player, *services.ErrorCode) {
 
 	const getPlayersByTeamID =
 		"SELECT team_id, id, first_name, last_name FROM players WHERE team_id = $1;"
-	rows, err := conn.Query(getPlayersByTeamID, id)
+	rows, err := master1.Query(getPlayersByTeamID, id)
 	if err != nil {
 		return nil, checkError(err)
 	}

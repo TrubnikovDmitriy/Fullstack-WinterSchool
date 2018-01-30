@@ -13,3 +13,10 @@ type Match struct {
 	StartTime *time.Time `json:"start_time"`
 	EndTime *time.Time `json:"end_time,omitempty"`
 }
+
+func (match *Match) Validation() bool {
+	if match.StartTime == nil {
+		return false
+	}
+	return true
+}
