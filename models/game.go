@@ -11,10 +11,10 @@ type Game struct {
 	ID int `json:"id"`
 	Title string `json:"title"`
 	About string `json:"about"`
-	Link string `json:"href,omitempty"`
+	Links []*Link `json:"href,omitempty"`
 }
 
-func (game *Game) Validation() bool {
+func (game *Game) Validate() bool {
 	if len(game.Title) == 0 {
 		return false
 	}
@@ -24,14 +24,21 @@ func (game *Game) Validation() bool {
 	return true
 }
 
-func (game *Game) GenerateLink() {
+func (game *Game) GenerateLinks() {
 	if game.ID != 0 {
-		game.Link = services.Href + "/games/" + strconv.Itoa(game.ID)
+		link := &Link{
+			Rel: "game",
+			Href: services.Href + "/games/" + strconv.Itoa(game.ID),
+			Action: "GET",
+		}
+		game.Links = append(game.Links, link)
 	}
 }
 
-func (game *Game) WriteAsJsonTo(ctx *fasthttp.RequestCtx) {
+func (game *Game) WriteAsJsonResponseTo(ctx *fasthttp.RequestCtx, statusCode int) {
+	game.GenerateLinks()
 	resp, _ := json.Marshal(game)
 	ctx.Write(resp)
 	ctx.SetContentType("application/json; charset=utf-8")
+	ctx.SetStatusCode(statusCode)
 }

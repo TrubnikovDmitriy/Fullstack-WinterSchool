@@ -10,7 +10,7 @@ type Tournament struct {
 	About string `json:"about"`
 }
 
-func (tourn *Tournament) Validation() bool {
+func (tourn *Tournament) Validate() bool {
 	if len(tourn.Title) == 0 {
 		return false
 	}

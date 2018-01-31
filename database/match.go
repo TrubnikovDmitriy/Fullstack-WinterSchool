@@ -5,12 +5,13 @@ import (
 	"../services"
 )
 
-func GetMatchByID(id string) (*models.Match, *services.ErrorCode) {
+func GetMatchByID(id string, id2 string) (*models.Match, *services.ErrorCode) {
 
 	const selectMatchByID =
 		"SELECT passed, id, first_team_id, second_team_id, first_team_score, second_team_score, " +
 			"link, start_time, end_time FROM matches WHERE id = $1"
 	var match models.Match
+	//master := sharedKeyForReadByTeamID()
 
 	row := master1.QueryRow(selectMatchByID, id)
 	err := row.Scan(&match.Passed, &match.ID, &match.FirstTeamID, &match.SecondTeamID,

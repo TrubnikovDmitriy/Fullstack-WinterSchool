@@ -7,7 +7,7 @@ type Team struct {
 	About string `json:"About"`
 }
 
-func (team *Team) Validation() bool {
+func (team *Team) Validate() bool {
 	if len(team.Name) == 0 {
 		return false
 	}

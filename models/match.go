@@ -12,9 +12,13 @@ type Match struct {
 	Link string `json:"link"`
 	StartTime *time.Time `json:"start_time"`
 	EndTime *time.Time `json:"end_time,omitempty"`
+	TourneyID int `json:"tourney_id"`
+	PrevMatch1 *int `json:"-"`
+	PrevMatch2 *int `json:"-"`
+	NextMatch *int `json:"-"`
 }
 
-func (match *Match) Validation() bool {
+func (match *Match) Validate() bool {
 	if match.StartTime == nil {
 		return false
 	}

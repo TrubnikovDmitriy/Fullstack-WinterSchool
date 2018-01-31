@@ -3,18 +3,20 @@ package database
 import (
 	"../models"
 	"../services"
+	"github.com/valyala/fasthttp"
+	"log"
 )
 
-func GetPlayerByID(id string) (*models.Player, *services.ErrorCode) {
+func GetPlayerByIDs(teamID int, playerID int) (*models.Player, *services.ErrorCode) {
 
 	const selectPlayerByID =
-		"SELECT id, first_name, last_name, about FROM players WHERE id = $1;"
+		"SELECT first_name, last_name, about, team_name FROM players WHERE id = $1;"
 
-	player := models.Player{}
+	db := sharedKeyForReadByTeamID(teamID)
+	player := models.Player{ID: playerID, TeamID: teamID}
 
-	err := master1.QueryRow(selectPlayerByID, id).
-		Scan(&player.ID, &player.FirstName, &player.LastName, &player.About)
-
+	err := db.QueryRow(selectPlayerByID, playerID).
+		Scan(&player.FirstName, &player.LastName, &player.About, &player.TeamName)
 	if err != nil {
 		return nil, checkError(err)
 	}
@@ -22,24 +24,56 @@ func GetPlayerByID(id string) (*models.Player, *services.ErrorCode) {
 	return &player, nil
 }
 
-func GetPlayersOfTeam(id string) ([]*models.Player, *services.ErrorCode) {
+func GetPlayersOfTeam(teamID int) ([]*models.Player, *services.ErrorCode) {
 
 	const getPlayersByTeamID =
-		"SELECT team_id, id, first_name, last_name FROM players WHERE team_id = $1;"
-	rows, err := master1.Query(getPlayersByTeamID, id)
+		"SELECT id, first_name, last_name, team_name FROM players WHERE team_id = $1;"
+
+	db := sharedKeyForReadByTeamID(teamID)
+	rows, err := db.Query(getPlayersByTeamID, teamID)
 	if err != nil {
 		return nil, checkError(err)
 	}
 
-	var posts []*models.Player
+	var players []*models.Player
 	for rows.Next() {
-		post := models.Player{}
-		err = rows.Scan(&post.TeamID, &post.ID, &post.FirstName, &post.LastName)
+		player := models.Player{TeamID: teamID}
+		err = rows.Scan(&player.ID, &player.FirstName, &player.LastName, &player.TeamName)
 		if err != nil {
 			return nil, checkError(err)
 		}
-		posts = append(posts, &post)
+		players = append(players, &player)
 	}
 
-	return posts, nil
+	return players, nil
+}
+
+func CreatePlayer(newPlayer *models.Player) *services.ErrorCode {
+
+	db := sharedKeyForReadByTeamID(newPlayer.TeamID)
+	const checkTeamExisting = "SELECT team_name FROM teams WHERE id = $1"
+
+	err := db.QueryRow(checkTeamExisting, newPlayer.TeamID).Scan(&newPlayer.TeamName)
+	if err != nil {
+		return checkError(err)
+	}
+
+	newPlayer.ID = getID("SELECT nextval('players_id_seq') FROM generate_series(0, 0);")
+	const createPlayer =
+		"INSERT INTO players(id, first_name, last_name, about, team_id, team_name) " +
+		"VALUES ($1, $2, $3, $4, $5, $6);"
+
+	db = sharedKeyForWriteByTeamID(newPlayer.TeamID)
+	_, err = db.Exec(createPlayer, newPlayer.ID, newPlayer.FirstName,
+		newPlayer.LastName, newPlayer.About, newPlayer.TeamID, newPlayer.TeamName)
+
+	if err != nil {
+		log.Print(err)
+		return &services.ErrorCode{
+			Code: fasthttp.StatusInternalServerError,
+			Message: "Request is not valid",
+		}
+	}
+
+	return nil
 }

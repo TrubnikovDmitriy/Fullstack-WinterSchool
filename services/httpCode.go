@@ -15,7 +15,7 @@ func CreateNew(code int) *ErrorCode {
 	return &ErrorCode{code, "", ""}
 }
 
-func (httpCode *ErrorCode) WriteAsJsonResponse(ctx *fasthttp.RequestCtx) {
+func (httpCode *ErrorCode) WriteAsJsonResponseTo(ctx *fasthttp.RequestCtx) {
 	resp, _ := json.Marshal(httpCode)
 	ctx.Write(resp)
 	ctx.SetStatusCode(httpCode.Code)

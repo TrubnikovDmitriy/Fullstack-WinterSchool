@@ -6,11 +6,11 @@ import (
 	"encoding/json"
 )
 
-// GET /v1/player/{id}
-func GetPlayer(ctx *fasthttp.RequestCtx) {
+// GET /v1/tourney/{id}
+func GetTournamentByID(ctx *fasthttp.RequestCtx) {
 
-	id := ctx.UserValue("id").(string)
-	team, err := database.GetPlayerByID(id)
+	id := ctx.UserValue("tourney_id").(string)
+	tourney, err := database.GetTournByID(id)
 
 	if err != nil {
 		ctx.SetStatusCode(err.Code)
@@ -20,6 +20,6 @@ func GetPlayer(ctx *fasthttp.RequestCtx) {
 	ctx.SetStatusCode(200)
 	setHeaders(ctx)
 
-	resp, _ := json.Marshal(team)
+	resp, _ := json.Marshal(tourney)
 	ctx.Write(resp)
 }

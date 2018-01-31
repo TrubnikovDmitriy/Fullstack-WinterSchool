@@ -11,20 +11,21 @@ var router *fasthttprouter.Router
 func init() {
 	router = fasthttprouter.New()
 
-	// team
-	router.GET("/v1/teams/:id", handlers.GetTeam)
-	router.GET("/v1/teams/:id/players", handlers.GetTeamPlayers)
+	// teams
+	router.GET("/v1/teams/:team_id", handlers.GetTeam)
+	router.GET("/v1/teams/:team_id/players", handlers.GetTeamPlayers)
 
-	// player
-	router.GET("/v1/players/:id", handlers.GetPlayer)
+	// players
+	router.GET("/v1/teams/:team_id/players/:player_id", handlers.GetPlayer)
+	router.POST("/v1/teams/:team_id/players", handlers.CreatePlayer)
 
-	// match
-	router.GET("/v1/matches/:id", handlers.GetMatch)
+	// matches
+	router.GET("/v1/tourney/:tourney_id/matches/:match_id", handlers.GetMatch)
 
-	// tournament
-	router.GET("/v1/tourney/:id", handlers.GetTournamentByID)
+	// tournaments
+	router.GET("/v1/tourney/:tourney_id", handlers.GetTournamentByID)
 
-	// game
+	// games
 	router.GET("/v1/games/:id", handlers.GetGame)
 	router.POST("/v1/games", handlers.CreateGame)
 }
