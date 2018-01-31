@@ -17,7 +17,7 @@ func GetTeam(ctx *fasthttp.RequestCtx) {
 
 	team, err := database.GetTeamByID(teamID)
 	if err != nil {
-		ctx.SetStatusCode(err.Code)
+		err.WriteAsJsonResponseTo(ctx)
 	} else {
 		team.WriteAsJsonResponseTo(ctx, fasthttp.StatusOK)
 	}
@@ -31,7 +31,7 @@ func CreateTeam(ctx *fasthttp.RequestCtx) {
 
 	err := database.CreateTeam(&team)
 	if err != nil {
-		ctx.SetStatusCode(err.Code)
+		err.WriteAsJsonResponseTo(ctx)
 	} else {
 		team.WriteAsJsonResponseTo(ctx, fasthttp.StatusCreated)
 	}

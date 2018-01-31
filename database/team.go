@@ -30,7 +30,7 @@ func CreateTeam(team *models.Team) *services.ErrorCode {
 	}
 
 	// Проверка на уникальность имени
-	const findTheSameTeamName = "SELECT id FROM teams WHERE title = $1";
+	const findTheSameTeamName = "SELECT id FROM teams WHERE team_name = $1";
 	var existingID int
 
 	if master1.QueryRow(findTheSameTeamName, team.Name).Scan(&existingID) == nil ||

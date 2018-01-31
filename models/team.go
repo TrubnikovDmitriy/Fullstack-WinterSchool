@@ -9,8 +9,8 @@ import (
 
 type Team struct {
 	ID int `json:"-"`
-	Name string `json:"name"`
-	About string `json:"About"`
+	Name string `json:"team_name"`
+	About string `json:"about"`
 	Links []*Link `json:"href"`
 }
 
