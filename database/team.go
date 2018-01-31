@@ -45,7 +45,7 @@ func CreateTeam(team *models.Team) *services.ErrorCode {
 	// Генерация ID
 	team.ID = getID("SELECT nextval('teams_id_seq') FROM generate_series(0, 0);")
 	// Ключ шардирования
-	master := sharedKeyForWriteByTeamID(team.ID)
+	master := sharedKeyForWriteByID(team.ID)
 
 	// Добавление
 	const createTeam =

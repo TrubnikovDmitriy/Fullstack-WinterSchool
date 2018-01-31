@@ -18,7 +18,7 @@ func (game *Game) Validate() bool {
 	if len(game.Title) == 0 {
 		return false
 	}
-	if len(game.Title) > 50 {
+	if len(game.Title) > services.MaxFieldLength {
 		return false
 	}
 	return true

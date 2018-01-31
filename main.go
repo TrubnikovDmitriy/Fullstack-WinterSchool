@@ -25,6 +25,7 @@ func init() {
 
 	// tournaments
 	router.GET("/v1/tourney/:tourney_id", handlers.GetTournamentByID)
+	router.POST("/v1/tourney", handlers.CreateTournament)
 
 	// games
 	router.GET("/v1/games/:id", handlers.GetGame)

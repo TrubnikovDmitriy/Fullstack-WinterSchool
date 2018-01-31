@@ -34,10 +34,10 @@ func (player *Player) Validate() bool {
 	if len(player.LastName) == 0 {
 		return false
 	}
-	if len(player.FirstName) > 50 {
+	if len(player.FirstName) > services.MaxFieldLength {
 		return false
 	}
-	if len(player.LastName) > 50 {
+	if len(player.LastName) > services.MaxFieldLength {
 		return false
 	}
 	return true

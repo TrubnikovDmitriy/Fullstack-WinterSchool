@@ -72,7 +72,7 @@ func CreatePlayer(player *models.Player) *services.ErrorCode {
 		"INSERT INTO players(id, first_name, last_name, about, team_id, team_name) " +
 		"VALUES ($1, $2, $3, $4, $5, $6);"
 
-	db = sharedKeyForWriteByTeamID(player.TeamID)
+	db = sharedKeyForWriteByID(player.TeamID)
 	_, err = db.Exec(createPlayer, player.ID, player.FirstName,
 		player.LastName, player.About, player.TeamID, player.TeamName)
 

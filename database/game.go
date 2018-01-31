@@ -35,7 +35,6 @@ func CreateGame(game *models.Game) *services.ErrorCode {
 	// Проверка на уникальность имени
 	const findTheSameGameTitle = "SELECT id FROM games WHERE title = $1";
 	var existingID int
-
 	if master1.QueryRow(findTheSameGameTitle, game.Title).Scan(&existingID) == nil ||
 		master2.QueryRow(findTheSameGameTitle, game.Title).Scan(&existingID) == nil {
 		return &services.ErrorCode{
@@ -48,10 +47,8 @@ func CreateGame(game *models.Game) *services.ErrorCode {
 
 	// Генерация ID
 	game.ID = getID("SELECT nextval('game_id_seq') FROM generate_series(0, 0);")
-
-
 	// Ключ шардирования
-	master := sharedKeyForWriteByTeamID(game.ID)
+	master := sharedKeyForWriteByID(game.ID)
 
 
 	// Добавление

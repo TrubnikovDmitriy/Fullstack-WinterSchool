@@ -18,7 +18,7 @@ func (team *Team) Validate() bool {
 	if len(team.Name) == 0 {
 		return false
 	}
-	if len(team.Name) > 100 {
+	if len(team.Name) > services.MaxFieldLength {
 		return false
 	}
 	return true

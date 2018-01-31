@@ -107,7 +107,7 @@ func checkError(err error) *services.ErrorCode {
 	return &services.ErrorCode{ Code:fasthttp.StatusNotFound }
 }
 
-func sharedKeyForWriteByTeamID(teamID int) *pgx.ConnPool {
+func sharedKeyForWriteByID(teamID int) *pgx.ConnPool {
 	if teamID % 2 != 0 {
 		return master1
 	} else {
