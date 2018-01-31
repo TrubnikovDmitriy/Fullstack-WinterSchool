@@ -10,8 +10,7 @@ import (
 // GET /v1/games/{id}
 func GetGame(ctx *fasthttp.RequestCtx) {
 
-	strID := ctx.UserValue("id").(string)
-	id, err := checkPathID(strID)
+	id, err := getPathID(ctx.UserValue("id"))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return

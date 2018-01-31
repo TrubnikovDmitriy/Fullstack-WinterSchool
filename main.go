@@ -13,10 +13,11 @@ func init() {
 
 	// teams
 	router.GET("/v1/teams/:team_id", handlers.GetTeam)
-	router.GET("/v1/teams/:team_id/players", handlers.GetTeamPlayers)
+	router.POST("/v1/teams", handlers.CreateTeam)
 
 	// players
 	router.GET("/v1/teams/:team_id/players/:player_id", handlers.GetPlayer)
+	router.GET("/v1/teams/:team_id/players", handlers.GetTeamPlayers)
 	router.POST("/v1/teams/:team_id/players", handlers.CreatePlayer)
 
 	// matches

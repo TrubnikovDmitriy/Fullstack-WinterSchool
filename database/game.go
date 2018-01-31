@@ -57,12 +57,10 @@ func CreateGame(game *models.Game) *services.ErrorCode {
 	// Добавление
 	const createNewGame =
 		"INSERT INTO games(id, title, about) VALUES ($1, $2, $3);"
+
 	_, err := master.Exec(createNewGame, game.ID, game.Title, game.About)
 	if err != nil {
-		return &services.ErrorCode{
-			Code: fasthttp.StatusInternalServerError,
-			Message: "Request is not valid",
-		}
+		return services.NewServerError()
 	}
 
 	return nil

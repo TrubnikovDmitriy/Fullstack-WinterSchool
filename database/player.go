@@ -48,24 +48,33 @@ func GetPlayersOfTeam(teamID int) ([]*models.Player, *services.ErrorCode) {
 	return players, nil
 }
 
-func CreatePlayer(newPlayer *models.Player) *services.ErrorCode {
+func CreatePlayer(player *models.Player) *services.ErrorCode {
 
-	db := sharedKeyForReadByTeamID(newPlayer.TeamID)
+	// Валидация
+	if !player.Validate() {
+		return &services.ErrorCode{
+			Code: fasthttp.StatusBadRequest,
+			Message: "Request is not valid",
+			Link: "TODO ссылку на документацию к API",
+		}
+	}
+
+	db := sharedKeyForReadByTeamID(player.TeamID)
 	const checkTeamExisting = "SELECT team_name FROM teams WHERE id = $1"
 
-	err := db.QueryRow(checkTeamExisting, newPlayer.TeamID).Scan(&newPlayer.TeamName)
+	err := db.QueryRow(checkTeamExisting, player.TeamID).Scan(&player.TeamName)
 	if err != nil {
 		return checkError(err)
 	}
 
-	newPlayer.ID = getID("SELECT nextval('players_id_seq') FROM generate_series(0, 0);")
+	player.ID = getID("SELECT nextval('players_id_seq') FROM generate_series(0, 0);")
 	const createPlayer =
 		"INSERT INTO players(id, first_name, last_name, about, team_id, team_name) " +
 		"VALUES ($1, $2, $3, $4, $5, $6);"
 
-	db = sharedKeyForWriteByTeamID(newPlayer.TeamID)
-	_, err = db.Exec(createPlayer, newPlayer.ID, newPlayer.FirstName,
-		newPlayer.LastName, newPlayer.About, newPlayer.TeamID, newPlayer.TeamName)
+	db = sharedKeyForWriteByTeamID(player.TeamID)
+	_, err = db.Exec(createPlayer, player.ID, player.FirstName,
+		player.LastName, player.About, player.TeamID, player.TeamName)
 
 	if err != nil {
 		log.Print(err)

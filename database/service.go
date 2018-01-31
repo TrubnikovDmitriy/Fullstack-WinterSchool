@@ -101,10 +101,10 @@ func initPostgresConnectionPool(config pgx.ConnConfig) *pgx.ConnPool {
 
 func checkError(err error) *services.ErrorCode {
 	if err == pgx.ErrNoRows {
-		return services.CreateNew(fasthttp.StatusNotFound)
+		return &services.ErrorCode{ Code:fasthttp.StatusNotFound }
 	}
 	log.Print(err)
-	return services.CreateNew(fasthttp.StatusInternalServerError)
+	return &services.ErrorCode{ Code:fasthttp.StatusNotFound }
 }
 
 func sharedKeyForWriteByTeamID(teamID int) *pgx.ConnPool {

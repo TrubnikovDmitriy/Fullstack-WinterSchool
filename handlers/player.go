@@ -10,14 +10,12 @@ import (
 // GET /v1/teams/{team_id}/players/{player_id}
 func GetPlayer(ctx *fasthttp.RequestCtx) {
 
-	teamStrID := ctx.UserValue("team_id").(string)
-	playerStrID := ctx.UserValue("player_id").(string)
-	teamID, err := checkPathID(teamStrID)
+	teamID, err := getPathID(ctx.UserValue("team_id"))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return
 	}
-	playerID, err := checkPathID(playerStrID)
+	playerID, err := getPathID(ctx.UserValue("player_id"))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return
@@ -35,8 +33,7 @@ func GetPlayer(ctx *fasthttp.RequestCtx) {
 // GET /v1/team/{team_id}/players
 func GetTeamPlayers(ctx *fasthttp.RequestCtx) {
 
-	teamStrID := ctx.UserValue("team_id").(string)
-	teamID, err := checkPathID(teamStrID)
+	teamID, err := getPathID(ctx.UserValue("team_id"))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return
@@ -56,8 +53,7 @@ func GetTeamPlayers(ctx *fasthttp.RequestCtx) {
 // POST /v1/teams/{team_id}/players
 func CreatePlayer(ctx *fasthttp.RequestCtx) {
 
-	teamStrID := ctx.UserValue("team_id").(string)
-	teamID, err := checkPathID(teamStrID)
+	teamID, err := getPathID(ctx.UserValue("team_id"))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return
