@@ -8,20 +8,42 @@ import (
 	"github.com/jackc/pgx/pgtype"
 )
 
-func GetMatchByID(id string, id2 string) (*models.Match, *serv.ErrorCode) {
-	// TODO REDO
-	const selectMatchByID =
-		"SELECT id, first_team_id, second_team_id, first_team_score, second_team_score, " +
-			"link, start_time, end_time FROM matches WHERE id = $1"
-	var match models.Match
-	//master := sharedKeyForReadByID()
+func GetMatchByID(tourneyID uuid.UUID, matchID uuid.UUID) (*models.Match, *serv.ErrorCode) {
 
-	row := master1.QueryRow(selectMatchByID, id)
-	err := row.Scan(&match.ID, &match.FirstTeamID, &match.SecondTeamID,
+	const selectMatchByID = "SelectMatchByID"
+	db := sharedKeyForReadByUUID(tourneyID)
+	db.Prepare(selectMatchByID,
+		"SELECT team_id_1, team_id_2, " +
+			"team_score_1, team_score_2, " +
+			"start_time, end_time, link, " +
+			"prev_match_id_1, prev_match_id_2, next_match_id " +
+			"FROM matches WHERE id = $1")
+
+
+	match := models.Match{ ID: matchID, TourneyID: tourneyID }
+	pgtypeUUID := [5]pgtype.UUID{}
+	commonUUID := [5]*uuid.UUID{}
+
+	row := db.QueryRow(selectMatchByID, matchID)
+	err := row.Scan(&pgtypeUUID[0], &pgtypeUUID[1],
 					&match.FirstTeamScore, &match.SecondTeamScore,
-					&match.Link, &match.StartTime, &match.EndTime)
+					&match.StartTime, &match.EndTime, &match.Link,
+					&pgtypeUUID[2], &pgtypeUUID[3], &pgtypeUUID[4])
 	if err != nil {
 		return nil, checkError(err)
+	} else {
+		for i, pgUUID := range pgtypeUUID {
+			if pgUUID.Status != pgtype.Null {
+				var temp uuid.UUID
+				temp, _ = uuid.FromBytes(pgUUID.Bytes[:])
+				commonUUID[i] = &temp
+			}
+		}
+		match.FirstTeamID = commonUUID[0]
+		match.SecondTeamID = commonUUID[1]
+		match.PrevMatch1 = commonUUID[2]
+		match.PrevMatch2 = commonUUID[3]
+		match.NextMatch = commonUUID[4]
 	}
 
 	return &match, nil
@@ -62,7 +84,6 @@ func CreateMatches(matches []models.Match, sharedKey uuid.UUID) *serv.ErrorCode 
 	}
 	return nil
 }
-
 
 func GetTournamentGrid(id uuid.UUID) (*models.MatchesArrayForm, *serv.ErrorCode) {
 

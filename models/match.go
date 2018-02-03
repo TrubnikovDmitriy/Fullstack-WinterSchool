@@ -1,6 +1,7 @@
 package models
 
 import (
+	"../services"
 	"time"
 	"github.com/satori/go.uuid"
 	"github.com/valyala/fasthttp"
@@ -9,12 +10,12 @@ import (
 
 type Match struct {
 
-	ID uuid.UUID `json:"id"`
+	ID uuid.UUID `json:"-"`
 
-	FirstTeamID     *int `json:"first_team_id"`
-	SecondTeamID    *int `json:"second_team_id"`
-	FirstTeamScore  int  `json:"first_team_score"`
-	SecondTeamScore int  `json:"second_team_score"`
+	FirstTeamID     *uuid.UUID `json:"first_team_id"`
+	SecondTeamID    *uuid.UUID `json:"second_team_id"`
+	FirstTeamScore  int        `json:"first_team_score"`
+	SecondTeamScore int        `json:"second_team_score"`
 
 	Link       string     `json:"link"`
 	StartTime  *time.Time `json:"start_time"`
@@ -42,14 +43,66 @@ func (match *Match) Validate() bool {
 }
 
 func (match *Match) GenerateLinks() {
-	//if game.ID != 0 {
-	//	link := &Link{
-	//		Rel: "game",
-	//		Href: services.Href + "/games/" + strconv.Itoa(game.ID),
-	//		Action: "GET",
-	//	}
-	//	game.Links = append(game.Links, link)
-	//}
+
+	match.Links = append(match.Links, Link {
+		Rel: "Турнирная сетка",
+		Href: serv.Href + "/tourney/" + match.TourneyID.String() + "/matches",
+		Action: "GET",
+	})
+
+	match.Links = append(match.Links, Link {
+		Rel: "Ключевые события матча",
+		Href: serv.Href + "/tourney/" + match.TourneyID.String() +
+				"/matches/" + match.ID.String() + "/timeline",
+		Action: "GET",
+	})
+
+	match.Links = append(match.Links, Link {
+		Rel: "Оставить комментарий",
+		Href: serv.Href + "/tourney/" + match.TourneyID.String() +
+				"/matches/" + match.ID.String() + "/timeline",
+		Action: "POST",
+	})
+
+	if match.FirstTeamID != nil {
+		match.Links = append(match.Links, Link{
+			Rel:    "Ссылка на команду №1",
+			Href:   serv.Href + "/teams/" + match.FirstTeamID.String(),
+			Action: "GET",
+		})
+	}
+	if match.SecondTeamID != nil {
+		match.Links = append(match.Links, Link{
+			Rel:    "Ссылка на команду №2",
+			Href:   serv.Href + "/teams/" + match.SecondTeamID.String(),
+			Action: "GET",
+		})
+	}
+
+	if match.PrevMatch1 != nil {
+		match.Links = append(match.Links, Link{
+			Rel:    "Ссылка на предыдущий матч №1",
+			Href:   serv.Href + "/tourney/" + match.TourneyID.String() +
+					"/matches/" + match.PrevMatch1.String(),
+			Action: "GET",
+		})
+	}
+	if match.PrevMatch2 != nil {
+		match.Links = append(match.Links, Link{
+			Rel:    "Ссылка на предыдущий матч  №2",
+			Href:   serv.Href + "/tourney/" + match.TourneyID.String() +
+					"/matches/" + match.PrevMatch1.String(),
+			Action: "GET",
+		})
+	}
+	if match.NextMatch != nil {
+		match.Links = append(match.Links, Link{
+			Rel:    "Ссылка на следующий матч",
+			Href:   serv.Href + "/tourney/" + match.TourneyID.String() +
+					"/matches/" + match.NextMatch.String(),
+			Action: "GET",
+		})
+	}
 }
 
 func (match *Match) WriteAsJsonResponseTo(ctx *fasthttp.RequestCtx, statusCode int) {
