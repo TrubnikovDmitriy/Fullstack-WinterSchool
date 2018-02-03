@@ -53,7 +53,7 @@ func CreateTeam(team *models.Team) *serv.ErrorCode {
 	// Добавление
 	_, err = master.Exec(createTeam, team.ID, team.Name, team.About)
 	if err != nil {
-		return serv.NewServerError()
+		return serv.NewServerError(err)
 	}
 
 	return nil

@@ -3,27 +3,19 @@ package handlers
 import (
 	"../database"
 	"github.com/valyala/fasthttp"
-	"encoding/json"
 )
 
 // GET /v1/match/{id}
 func GetMatch(ctx *fasthttp.RequestCtx) {
 
-	tourney_id := ctx.UserValue("tourney_id").(string)
-	match_id := ctx.UserValue("match_id").(string)
-
-
-
-	match, err := database.GetMatchByID(match_id, tourney_id)
+	tourneyID := ctx.UserValue("tourneyID").(string)
+	matchID := ctx.UserValue("matchID").(string)
+	
+	match, err := database.GetMatchByID(matchID, tourneyID)
 
 	if err != nil {
 		ctx.SetStatusCode(err.Code)
-		return
+	} else {
+		match.WriteAsJsonResponseTo(ctx, fasthttp.StatusOK)
 	}
-
-	ctx.SetStatusCode(200)
-	setHeaders(ctx)
-
-	resp, _ := json.Marshal(match)
-	ctx.Write(resp)
 }

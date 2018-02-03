@@ -37,7 +37,7 @@ func CreateGame(game *models.Game) *serv.ErrorCode {
 	if err != nil {
 		return &serv.ErrorCode{
 			Code: fasthttp.StatusConflict,
-			Message: "Game with the same title already exist",
+			Message: "Game with the same title already exists",
 			Link: serv.Href + "/games/" + existingID.String(),
 		}
 	}
@@ -48,12 +48,12 @@ func CreateGame(game *models.Game) *serv.ErrorCode {
 	master := sharedKeyForWriteByUUID(game.ID)
 
 	// Добавление
-	const createNewGame =
-		"INSERT INTO games(id, title, about) VALUES ($1, $2, $3);"
+	const createNewGame = "CreateGame"
+	master.Prepare(createNewGame, "INSERT INTO games(id, title, about) VALUES ($1, $2, $3);")
 
 	_, err = master.Exec(createNewGame, game.ID, game.Title, game.About)
 	if err != nil {
-		return serv.NewServerError()
+		return serv.NewServerError(err)
 	}
 
 	return nil

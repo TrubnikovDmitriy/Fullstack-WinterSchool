@@ -9,6 +9,7 @@ import (
 	"github.com/satori/go.uuid"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/jackc/pgx/pgtype"
 )
 
 var (
@@ -115,10 +116,10 @@ func initPostgresConnectionPool(config pgx.ConnConfig) *pgx.ConnPool {
 
 func checkError(err error) *serv.ErrorCode {
 	if err == pgx.ErrNoRows {
-		return &serv.ErrorCode{ Code:fasthttp.StatusNotFound }
+		return &serv.ErrorCode{ Code: fasthttp.StatusNotFound }
 	}
 	log.Print(err)
-	return &serv.ErrorCode{ Code:fasthttp.StatusInternalServerError }
+	return &serv.ErrorCode{ Code: fasthttp.StatusInternalServerError }
 }
 
 
@@ -132,14 +133,6 @@ func sharedKeyForWriteByID(teamID int) *pgx.ConnPool {
 
 func sharedKeyForWriteByUUID(uuid uuid.UUID) *pgx.ConnPool {
 	return masterConnectionPool[uuid[0] % serv.NumberOfShards]
-}
-
-func sharedKeyForReadByID(teamID int) *pgx.ConnPool {
-	if teamID % 2 != 0 {
-		return choiceMasterSlave(master1, slave1)
-	} else {
-		return choiceMasterSlave(master2, slave2)
-	}
 }
 
 func sharedKeyForReadByUUID(uuid uuid.UUID) *pgx.ConnPool {
@@ -176,7 +169,6 @@ func getUUID() uuid.UUID {
 }
 
 
-
 func verifyUnique(sql string, ptrDest interface{}, args string) error {
 
 	for _, master := range masterConnectionPool {
@@ -192,4 +184,8 @@ func verifyUnique(sql string, ptrDest interface{}, args string) error {
 	}
 
 	return nil
+}
+
+func castUUID(pgUUID pgtype.UUID) uuid.UUID {
+	return uuid.FromBytesOrNil(pgUUID.Bytes[:])
 }

@@ -3,6 +3,7 @@ package serv
 import (
 	"github.com/valyala/fasthttp"
 	"encoding/json"
+	"log"
 )
 
 type ErrorCode struct {
@@ -26,7 +27,8 @@ func NewBadRequest(message string) *ErrorCode {
 	}
 }
 
-func NewServerError() *ErrorCode {
+func NewServerError(err error) *ErrorCode {
+	log.Print(err)
 	return &ErrorCode{
 		Code: fasthttp.StatusInternalServerError,
 		Message: fasthttp.StatusMessage(fasthttp.StatusInternalServerError),

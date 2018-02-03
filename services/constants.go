@@ -5,6 +5,7 @@ const (
 	SlaveToMasterReadRate = 4
 	MaxMatchesInTournament = 127
 	MaxFieldLength = 50
+	MinPasswordLength = 6
 	MaxConnections = 50
 	NumberOfShards = 2
 )

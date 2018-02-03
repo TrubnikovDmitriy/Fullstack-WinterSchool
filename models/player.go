@@ -2,63 +2,54 @@ package models
 
 import (
 	"../services"
-	"strconv"
 	"github.com/valyala/fasthttp"
 	"encoding/json"
+	"github.com/satori/go.uuid"
 )
 
+
 type Player struct {
-	ID        int     `json:"-"`
 
-	FirstName string  `json:"first_name"`
-	LastName  string  `json:"last_name"`
-	About     string  `json:"about,omitempty"`
+	ID       uuid.UUID `json:"-"`
+	PersonID uuid.UUID `json:"-"`
+	Nickname string    `json:"nickname"`
 
-	TeamID    int     `json:"-"`
-	TeamName  string  `json:"team_name"`
+	TeamID   uuid.UUID `json:"-"`
+	TeamName string    `json:"team_name"`
+	Retire   bool      `json:"retire"`
+
 	Links     []Link  `json:"href,omitempty"`
 }
 
 
-func (player *Player) Validate() bool {
-	if len(player.FirstName) == 0 {
-		return false
+func (player *Player)  Validate() *serv.ErrorCode {
+
+	err := fieldLengthValidate(player.Nickname, "nickname")
+	if err != nil {
+		return err
 	}
-	if len(player.LastName) == 0 {
-		return false
-	}
-	if len(player.FirstName) > serv.MaxFieldLength {
-		return false
-	}
-	if len(player.LastName) > serv.MaxFieldLength {
-		return false
-	}
-	return true
+	return nil
 }
 
 func (player *Player) GenerateLinks() {
-	if player.TeamID != 0 {
 
-		player.Links = append(player.Links, Link {
-			Rel: "Команда",
-			Href: serv.Href + "/teams/" + strconv.Itoa(player.TeamID),
-			Action: "GET",
-		})
+	player.Links = append(player.Links, Link {
+		Rel: "Команда",
+		Href: serv.Href + "/teams/" + player.TeamID.String(),
+		Action: "GET",
+	})
 
-		player.Links = append(player.Links, Link {
-			Rel: "Состав команды",
-			Href: serv.Href + "/teams/" + strconv.Itoa(player.TeamID) + "/players",
-			Action: "GET",
-		})
-	}
-	if player.TeamID != 0 && player.ID != 0 {
-		player.Links = append(player.Links, Link {
-			Rel: "Страница игрока",
-			Href: serv.Href + "/teams/" + strconv.Itoa(player.TeamID) +
-				"/players/" + strconv.Itoa(player.ID),
-			Action: "GET",
-		})
-	}
+	player.Links = append(player.Links, Link {
+		Rel: "Состав команды",
+		Href: serv.Href + "/teams/" + player.TeamID.String() + "/players",
+		Action: "GET",
+	})
+	player.Links = append(player.Links, Link {
+		Rel: "Страница игрока",
+		Href: serv.Href + "/teams/" + player.TeamID.String() +
+			"/players/" + player.ID.String(),
+		Action: "GET",
+	})
 }
 
 func (player *Player) WriteAsJsonResponseTo(ctx *fasthttp.RequestCtx, statusCode int) {

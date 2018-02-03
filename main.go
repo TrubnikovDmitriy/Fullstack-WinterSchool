@@ -12,6 +12,10 @@ var router *fasthttprouter.Router
 func init() {
 	router = fasthttprouter.New()
 
+	// persons
+	router.POST("/v1/persons", handlers.CreatePerson)
+	router.GET("/v1/persons/:person_id", handlers.GetPerson)
+
 	// teams
 	router.GET("/v1/teams/:team_id", handlers.GetTeam)
 	router.POST("/v1/teams", handlers.CreateTeam)
@@ -19,7 +23,7 @@ func init() {
 	// players
 	router.GET("/v1/teams/:team_id/players/:player_id", handlers.GetPlayer)
 	router.GET("/v1/teams/:team_id/players", handlers.GetTeamPlayers)
-	router.POST("/v1/teams/:team_id/players", handlers.CreatePlayer)
+	router.POST("/v1/players", handlers.CreatePlayer)
 
 	// matches
 	router.GET("/v1/tourney/:tourney_id/matches/:match_id", handlers.GetMatch)
