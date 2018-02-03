@@ -10,7 +10,7 @@ import (
 // GET /v1/teams/{team_id}
 func GetTeam(ctx *fasthttp.RequestCtx) {
 
-	teamID, err := getPathID(ctx.UserValue("team_id"))
+	teamID, err := getPathUUID(ctx.UserValue("team_id").(string))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 	}

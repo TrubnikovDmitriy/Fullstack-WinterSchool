@@ -6,6 +6,9 @@ import (
 	"log"
 	"github.com/valyala/fasthttp"
 	"math/rand"
+	"github.com/satori/go.uuid"
+	"fmt"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -13,7 +16,12 @@ var (
 	master2 *pgx.ConnPool
 	slave1 *pgx.ConnPool
 	slave2 *pgx.ConnPool
+
+	masterConnectionPool []*pgx.ConnPool
+	slaveConnectionPool []*pgx.ConnPool
 )
+
+var ErrNotUnique = errors.New("Inserting statement violates the consistency")
 
 func init() {
 
@@ -84,13 +92,19 @@ func init() {
 	slave1 = initPostgresConnectionPool(pgxConfig)
 	master2 = initPostgresConnectionPool(pgxConfig)
 	slave2 = initPostgresConnectionPool(pgxConfig)
+
+	masterConnectionPool = append(masterConnectionPool, master1)
+	masterConnectionPool = append(masterConnectionPool, master2)
+
+	slaveConnectionPool = append(slaveConnectionPool, slave1)
+	slaveConnectionPool = append(slaveConnectionPool, slave2)
 }
 
 func initPostgresConnectionPool(config pgx.ConnConfig) *pgx.ConnPool {
 
 	pgConnPool, err := pgx.NewConnPool(pgx.ConnPoolConfig {
 		ConnConfig: config,
-		MaxConnections: 50,
+		MaxConnections: serv.MaxConnections,
 	})
 
 	if err != nil {
@@ -99,13 +113,14 @@ func initPostgresConnectionPool(config pgx.ConnConfig) *pgx.ConnPool {
 	return pgConnPool
 }
 
-func checkError(err error) *services.ErrorCode {
+func checkError(err error) *serv.ErrorCode {
 	if err == pgx.ErrNoRows {
-		return &services.ErrorCode{ Code:fasthttp.StatusNotFound }
+		return &serv.ErrorCode{ Code:fasthttp.StatusNotFound }
 	}
 	log.Print(err)
-	return &services.ErrorCode{ Code:fasthttp.StatusNotFound }
+	return &serv.ErrorCode{ Code:fasthttp.StatusInternalServerError }
 }
+
 
 func sharedKeyForWriteByID(teamID int) *pgx.ConnPool {
 	if teamID % 2 != 0 {
@@ -115,7 +130,11 @@ func sharedKeyForWriteByID(teamID int) *pgx.ConnPool {
 	}
 }
 
-func sharedKeyForReadByTeamID(teamID int) *pgx.ConnPool {
+func sharedKeyForWriteByUUID(uuid uuid.UUID) *pgx.ConnPool {
+	return masterConnectionPool[uuid[0] % serv.NumberOfShards]
+}
+
+func sharedKeyForReadByID(teamID int) *pgx.ConnPool {
 	if teamID % 2 != 0 {
 		return choiceMasterSlave(master1, slave1)
 	} else {
@@ -123,13 +142,19 @@ func sharedKeyForReadByTeamID(teamID int) *pgx.ConnPool {
 	}
 }
 
+func sharedKeyForReadByUUID(uuid uuid.UUID) *pgx.ConnPool {
+	dbID := uuid[0] % serv.NumberOfShards
+	return choiceMasterSlave(masterConnectionPool[dbID], slaveConnectionPool[dbID])
+}
+
 func choiceMasterSlave(masterN *pgx.ConnPool, slaveN *pgx.ConnPool) *pgx.ConnPool {
-	if rand.Int31n(services.SlaveToMasterReadRate) == 0 {
+	if rand.Int31n(serv.SlaveToMasterReadRate) == 0 {
 		return masterN
 	} else {
 		return slaveN
 	}
 }
+
 
 func getID(sql string) int {
 
@@ -140,4 +165,31 @@ func getID(sql string) int {
 	master2.QueryRow(sql)
 
 	return newID
+}
+
+func getUUID() uuid.UUID {
+	id, err := uuid.NewV4()
+	if err != nil {
+		fmt.Print(err)
+	}
+	return id
+}
+
+
+
+func verifyUnique(sql string, ptrDest interface{}, args string) error {
+
+	for _, master := range masterConnectionPool {
+		err := master.QueryRow(sql, args).Scan(ptrDest)
+		if err != pgx.ErrNoRows {
+			if err == nil {
+				return ErrNotUnique
+			} else {
+				fmt.Print(err)
+				return err
+			}
+		}
+	}
+
+	return nil
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"./handlers"
+	"./database"
 	"github.com/valyala/fasthttp"
 	"github.com/buaazp/fasthttprouter"
 )
@@ -25,11 +26,15 @@ func init() {
 
 	// tournaments
 	router.GET("/v1/tourney/:tourney_id", handlers.GetTournamentByID)
+	router.GET("/v1/tourney/:tourney_id/matches", handlers.GetTournamentGrid)
 	router.POST("/v1/tourney", handlers.CreateTournament)
 
 	// games
 	router.GET("/v1/games/:id", handlers.GetGame)
 	router.POST("/v1/games", handlers.CreateGame)
+
+	// test
+	router.GET("/test", database.Test)
 }
 
 func main() {

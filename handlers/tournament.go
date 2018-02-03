@@ -7,22 +7,22 @@ import (
 	"encoding/json"
 )
 
+
 // GET /v1/tourney/{id}
 func GetTournamentByID(ctx *fasthttp.RequestCtx) {
 
-	id := ctx.UserValue("tourney_id").(string)
+	id, err := getPathUUID(ctx.UserValue("tourney_id").(string))
+	if err != nil {
+		err.WriteAsJsonResponseTo(ctx)
+		return
+	}
 	tourney, err := database.GetTourneyByID(id)
 
 	if err != nil {
 		ctx.SetStatusCode(err.Code)
-		return
+	} else {
+		tourney.WriteAsJsonResponseTo(ctx, fasthttp.StatusOK)
 	}
-
-	ctx.SetStatusCode(200)
-	setHeaders(ctx)
-
-	resp, _ := json.Marshal(tourney)
-	ctx.Write(resp)
 }
 
 // POST /v1/tourney
@@ -36,5 +36,22 @@ func CreateTournament(ctx *fasthttp.RequestCtx) {
 		err.WriteAsJsonResponseTo(ctx)
 	} else {
 		tournament.WriteAsJsonResponseTo(ctx, fasthttp.StatusCreated)
+	}
+}
+
+// GET /v1/tourney/{id}/matches
+func GetTournamentGrid(ctx *fasthttp.RequestCtx) {
+
+	id, err := getPathUUID(ctx.UserValue("tourney_id").(string))
+	if err != nil {
+		err.WriteAsJsonResponseTo(ctx)
+		return
+	}
+
+	grid, err := database.GetTournamentGrid(id)
+	if err != nil {
+		ctx.SetStatusCode(err.Code)
+	} else {
+		grid.WriteAsJsonResponseTo(ctx, fasthttp.StatusOK)
 	}
 }

@@ -7,12 +7,12 @@ import (
 	"log"
 )
 
-func GetPlayerByIDs(teamID int, playerID int) (*models.Player, *services.ErrorCode) {
+func GetPlayerByIDs(teamID int, playerID int) (*models.Player, *serv.ErrorCode) {
 
 	const selectPlayerByID =
 		"SELECT first_name, last_name, about, team_name FROM players WHERE id = $1;"
 
-	db := sharedKeyForReadByTeamID(teamID)
+	db := sharedKeyForReadByID(teamID)
 	player := models.Player{ID: playerID, TeamID: teamID}
 
 	err := db.QueryRow(selectPlayerByID, playerID).
@@ -24,12 +24,12 @@ func GetPlayerByIDs(teamID int, playerID int) (*models.Player, *services.ErrorCo
 	return &player, nil
 }
 
-func GetPlayersOfTeam(teamID int) ([]*models.Player, *services.ErrorCode) {
+func GetPlayersOfTeam(teamID int) ([]*models.Player, *serv.ErrorCode) {
 
 	const getPlayersByTeamID =
 		"SELECT id, first_name, last_name, team_name FROM players WHERE team_id = $1;"
 
-	db := sharedKeyForReadByTeamID(teamID)
+	db := sharedKeyForReadByID(teamID)
 	rows, err := db.Query(getPlayersByTeamID, teamID)
 	if err != nil {
 		return nil, checkError(err)
@@ -48,18 +48,18 @@ func GetPlayersOfTeam(teamID int) ([]*models.Player, *services.ErrorCode) {
 	return players, nil
 }
 
-func CreatePlayer(player *models.Player) *services.ErrorCode {
+func CreatePlayer(player *models.Player) *serv.ErrorCode {
 
 	// Валидация
 	if !player.Validate() {
-		return &services.ErrorCode{
+		return &serv.ErrorCode{
 			Code: fasthttp.StatusBadRequest,
 			Message: "Request is not valid",
 			Link: "TODO ссылку на документацию к API",
 		}
 	}
 
-	db := sharedKeyForReadByTeamID(player.TeamID)
+	db := sharedKeyForReadByID(player.TeamID)
 	const checkTeamExisting = "SELECT team_name FROM teams WHERE id = $1"
 
 	err := db.QueryRow(checkTeamExisting, player.TeamID).Scan(&player.TeamName)
@@ -78,7 +78,7 @@ func CreatePlayer(player *models.Player) *services.ErrorCode {
 
 	if err != nil {
 		log.Print(err)
-		return &services.ErrorCode{
+		return &serv.ErrorCode{
 			Code: fasthttp.StatusInternalServerError,
 			Message: "Request is not valid",
 		}

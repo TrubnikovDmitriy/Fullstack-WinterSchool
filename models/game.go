@@ -2,37 +2,34 @@ package models
 
 import (
 	"../services"
-	"strconv"
 	"github.com/valyala/fasthttp"
 	"encoding/json"
+	"github.com/satori/go.uuid"
 )
 
 type Game struct {
-	ID int `json:"id"`
+	ID uuid.UUID `json:"id"`
 	Title string `json:"title"`
 	About string `json:"about"`
-	Links []*Link `json:"href,omitempty"`
+	Links []Link `json:"href,omitempty"`
 }
 
-func (game *Game) Validate() bool {
+func (game *Game) Validate() *serv.ErrorCode {
 	if len(game.Title) == 0 {
-		return false
+		return serv.NewBadRequest("Title is zero length")
 	}
-	if len(game.Title) > services.MaxFieldLength {
-		return false
+	if len(game.Title) > serv.MaxFieldLength {
+		return serv.NewBadRequest("Too long title")
 	}
-	return true
+	return nil
 }
 
 func (game *Game) GenerateLinks() {
-	if game.ID != 0 {
-		link := &Link{
-			Rel: "game",
-			Href: services.Href + "/games/" + strconv.Itoa(game.ID),
-			Action: "GET",
-		}
-		game.Links = append(game.Links, link)
-	}
+		game.Links = append(game.Links, Link {
+		Rel: "game",
+		Href: serv.Href + "/games/" + game.ID.String(),
+		Action: "GET",
+	})
 }
 
 func (game *Game) WriteAsJsonResponseTo(ctx *fasthttp.RequestCtx, statusCode int) {

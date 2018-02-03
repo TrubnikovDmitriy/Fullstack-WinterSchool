@@ -4,17 +4,18 @@ import (
 	"../models"
 	"../services"
 	"github.com/valyala/fasthttp"
-	"strconv"
+	"github.com/satori/go.uuid"
 )
 
 
-func GetGameByID(id int) (*models.Game, *services.ErrorCode) {
+func GetGameByID(id uuid.UUID) (*models.Game, *serv.ErrorCode) {
 
-	const selectGameByID = "SELECT title, about FROM games WHERE id = $1"
+	const selectGameByID = "SelectGameByID"
+	db := sharedKeyForReadByUUID(id)
+	db.Prepare(selectGameByID, "SELECT title, about FROM games WHERE id = $1")
 
 	game := models.Game{ID: id}
-	master := sharedKeyForReadByTeamID(id)
-	err := master.QueryRow(selectGameByID, id).Scan(&game.Title, &game.About)
+	err := db.QueryRow(selectGameByID, id).Scan(&game.Title, &game.About)
 	if err != nil {
 		return nil, checkError(err)
 	}
@@ -22,42 +23,37 @@ func GetGameByID(id int) (*models.Game, *services.ErrorCode) {
 	return &game, nil
 }
 
-func CreateGame(game *models.Game) *services.ErrorCode {
+func CreateGame(game *models.Game) *serv.ErrorCode {
 
 	// Валидация
-	if !game.Validate() {
-		return &services.ErrorCode{
-			Code: fasthttp.StatusBadRequest,
-			Message: "Request is not valid",
-		}
+	errorCode := game.Validate()
+	if errorCode != nil {
+		return errorCode
 	}
 
 	// Проверка на уникальность имени
-	const findTheSameGameTitle = "SELECT id FROM games WHERE title = $1";
-	var existingID int
-	if master1.QueryRow(findTheSameGameTitle, game.Title).Scan(&existingID) == nil ||
-		master2.QueryRow(findTheSameGameTitle, game.Title).Scan(&existingID) == nil {
-		return &services.ErrorCode{
+	var existingID uuid.UUID
+	err := verifyUnique("SELECT id FROM games WHERE title = $1", &existingID, game.Title)
+	if err != nil {
+		return &serv.ErrorCode{
 			Code: fasthttp.StatusConflict,
 			Message: "Game with the same title already exist",
-			Link: services.Href + "/games/" + strconv.Itoa(existingID),
+			Link: serv.Href + "/games/" + existingID.String(),
 		}
 	}
 
 
-	// Генерация ID
-	game.ID = getID("SELECT nextval('game_id_seq') FROM generate_series(0, 0);")
-	// Ключ шардирования
-	master := sharedKeyForWriteByID(game.ID)
-
+	// Генерация ID и ключ шардирования
+	game.ID = getUUID()
+	master := sharedKeyForWriteByUUID(game.ID)
 
 	// Добавление
 	const createNewGame =
 		"INSERT INTO games(id, title, about) VALUES ($1, $2, $3);"
 
-	_, err := master.Exec(createNewGame, game.ID, game.Title, game.About)
+	_, err = master.Exec(createNewGame, game.ID, game.Title, game.About)
 	if err != nil {
-		return services.NewServerError()
+		return serv.NewServerError()
 	}
 
 	return nil

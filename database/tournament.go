@@ -4,17 +4,19 @@ import (
 	"../models"
 	"../services"
 	"github.com/valyala/fasthttp"
-	"container/heap"
-	"strconv"
+	"github.com/satori/go.uuid"
 )
 
-func GetTourneyByID(id string) (*models.Tournament, *services.ErrorCode) {
 
-	const selectTourneyByID = "SELECT id, title, started, ended, about " +
-							"FROM tournament WHERE id =$1"
+func GetTourneyByID(id uuid.UUID) (*models.Tournament, *serv.ErrorCode) {
+
+	db := sharedKeyForReadByUUID(id)
+	const selectTourneyByID = "SelectTourneyByID"
+	db.Prepare(selectTourneyByID,
+		"SELECT id, title, started, ended, about FROM tournaments WHERE id =$1")
 
 	var tourney models.Tournament
-	err := master1.QueryRow(selectTourneyByID, id).
+	err := db.QueryRow(selectTourneyByID, id).
 		Scan(&tourney.ID, &tourney.Title, &tourney.Started, &tourney.Ended, &tourney.About)
 
 	if err != nil {
@@ -24,46 +26,43 @@ func GetTourneyByID(id string) (*models.Tournament, *services.ErrorCode) {
 	return &tourney, nil;
 }
 
-func CreateTournament(tourney *models.Tournament) *services.ErrorCode {
+func CreateTournament(tourney *models.Tournament) *serv.ErrorCode {
 
 	// Валидация
-	if !tourney.Validate() {
-		return &services.ErrorCode {
-			Code: fasthttp.StatusBadRequest,
-			Message: "Bad request body",
-		}
+	errorCode := tourney.Validate()
+	if errorCode != nil {
+		return errorCode
 	}
-
 
 	// Проверка на уникальность имени
-	const findTheSameTournamentTitle = "SELECT id FROM tournaments WHERE title = $1";
-	var existingID int
-	if master1.QueryRow(findTheSameTournamentTitle, tourney.Title).Scan(&existingID) == nil ||
-		master2.QueryRow(findTheSameTournamentTitle, tourney.Title).Scan(&existingID) == nil {
-		return &services.ErrorCode{
+	const findTheSameTournamentTitle = "SELECT id FROM tournaments WHERE title = $1"
+	var existingID uuid.UUID
+	err := verifyUnique(findTheSameTournamentTitle, &existingID, tourney.Title)
+	if err != nil {
+		return &serv.ErrorCode{
 			Code: fasthttp.StatusConflict,
 			Message: "Tournament with the same title already exist",
-			Link: services.Href + "/tourney/" + strconv.Itoa(existingID),
+			Link: serv.Href + "/tourney/" + existingID.String(),
 		}
 	}
 
+	// Генерация UUID и ключ шардирования
+	tourney.ID = getUUID()
+	master := sharedKeyForWriteByUUID(tourney.ID)
 
-	// Генерация ID
-	tourney.ID = getID("SELECT nextval('game_id_seq') FROM tournament_series(0, 0);")
-	// Ключ шардирования
-	master := sharedKeyForWriteByID(tourney.ID)
-
-
-	// Добавление
-	const createNewGame =
-		"INSERT INTO tournaments(id, title, started, about) VALUES ($1, $2, $3, $4);"
-
-	_, err := master.Exec(createNewGame, tourney.ID,
-			tourney.Title, tourney.Started, tourney.About)
+	// Добавление турнира
+	const createNewTournament =
+		"INSERT INTO tournaments(id, title, started, ended, about) " +
+			"VALUES ($1, $2, $3, $4, $5);"
+	_, err = master.Exec(createNewTournament, tourney.ID, tourney.Title,
+						tourney.Started, tourney.Ended, tourney.About)
 	if err != nil {
-		return services.NewServerError()
+		return checkError(err)
 	}
 
 
-	return nil
+	// Распарсить дерево матчей в массив
+	// (под капотом им еще генерируются uuid и связываются между собой ссылками)
+	matches := tourney.MatchTree.CreateArrayMatch()
+	return CreateMatches(matches, tourney.ID)
 }

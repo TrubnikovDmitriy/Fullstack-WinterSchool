@@ -1,23 +1,31 @@
 package models
 
 import (
-	"../services"
 	"time"
+	"github.com/satori/go.uuid"
+	"github.com/valyala/fasthttp"
+	"encoding/json"
 )
 
 type Match struct {
-	ID int `json:"id"`
-	FirstTeamID *int `json:"first_team_id,omitempty"`
-	SecondTeamID *int `json:"second_team_id,omitempty"`
-	FirstTeamScore int `json:"first_team_score"`
-	SecondTeamScore int `json:"second_team_score"`
-	Link string `json:"link"`
-	StartTime *time.Time `json:"start_time"`
-	EndTime *time.Time `json:"end_time,omitempty"`
-	TourneyID int `json:"-"`
-	PrevMatch1 *int `json:"prev_match_id_1,omitempty"`
-	PrevMatch2 *int `json:"prev_match_id_2,omitempty"`
-	NextMatch *int `json:"next_match_id,omitempty"`
+
+	ID uuid.UUID `json:"id"`
+
+	FirstTeamID     *int `json:"first_team_id"`
+	SecondTeamID    *int `json:"second_team_id"`
+	FirstTeamScore  int  `json:"first_team_score"`
+	SecondTeamScore int  `json:"second_team_score"`
+
+	Link       string     `json:"link"`
+	StartTime  *time.Time `json:"start_time"`
+	EndTime    *time.Time `json:"end_time"`
+
+	TourneyID  uuid.UUID  `json:"-"`
+	PrevMatch1 *uuid.UUID `json:"prev_match_id_1"`
+	PrevMatch2 *uuid.UUID `json:"prev_match_id_2"`
+	NextMatch  *uuid.UUID `json:"next_match_id"`
+
+	Links      []Link    `json:"href"`
 }
 
 func (match *Match) Validate() bool {
@@ -33,48 +41,21 @@ func (match *Match) Validate() bool {
 	return true
 }
 
-
-
-
-type MatchTreeForm struct {
-	LeftChild *MatchTreeForm `json:"prev_match_1"`
-	RightChild *MatchTreeForm `json:"prev_match_2"`
-	StartTime time.Time `json:"start_time"`
+func (match *Match) GenerateLinks() {
+	//if game.ID != 0 {
+	//	link := &Link{
+	//		Rel: "game",
+	//		Href: services.Href + "/games/" + strconv.Itoa(game.ID),
+	//		Action: "GET",
+	//	}
+	//	game.Links = append(game.Links, link)
+	//}
 }
 
-func (match *MatchTreeForm) Validate() bool {
-	ttl := services.MaxMatchesInTournament
-	return match.recursiveValidate(match.StartTime, &ttl)
-}
-
-// Контролируемая рекурсия, чтобы проверить
-// не начались ли вышестоящие турниры раньше по времени
-func (match *MatchTreeForm) recursiveValidate(parentTime time.Time, ttl *int) bool {
-	if *ttl == 0 {
-		return false
-	}
-	if *ttl != services.MaxMatchesInTournament {
-		if match.StartTime.After(parentTime) || match.StartTime.Equal(parentTime) {
-			return false
-		}
-	}
-	*ttl--
-	if (match.LeftChild == nil) && (match.RightChild == nil) {
-		return true
-	}
-	if match.LeftChild == match.RightChild {
-		return false
-	}
-	if (match.LeftChild != nil) && (match.RightChild == nil) {
-		return false
-	}
-	if (match.LeftChild == nil) && (match.RightChild != nil) {
-		return false
-	}
-	flag := match.LeftChild.recursiveValidate(match.StartTime, ttl)
-	if !flag {
-		return false
-	}
-	flag = match.RightChild.recursiveValidate(match.StartTime, ttl)
-	return flag
+func (match *Match) WriteAsJsonResponseTo(ctx *fasthttp.RequestCtx, statusCode int) {
+	match.GenerateLinks()
+	resp, _ := json.Marshal(match)
+	ctx.Write(resp)
+	ctx.SetContentType("application/json; charset=utf-8")
+	ctx.SetStatusCode(statusCode)
 }

@@ -5,12 +5,10 @@ import (
 )
 
 type Link struct {
-	Rel string `json:"rel"`
-	Href string `json:"href"`
-	Action string `json:"action"`
+	Rel 	string `json:"rel"`
+	Href 	string `json:"href"`
+	Action 	string `json:"action"`
 }
-
-// нахуй такие интерфейсы вообще нужны
 
 type Validator interface {
 	Validate() bool

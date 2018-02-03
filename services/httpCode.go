@@ -1,4 +1,4 @@
-package services
+package serv
 
 import (
 	"github.com/valyala/fasthttp"
@@ -18,10 +18,10 @@ func NewNotFound() *ErrorCode {
 	}
 }
 
-func NewBadRequest() *ErrorCode {
+func NewBadRequest(message string) *ErrorCode {
 	return &ErrorCode{
 		Code: fasthttp.StatusBadRequest,
-		Message: "Request is not valid",
+		Message: message,
 		Link: "Ссылка на документацию к API",
 	}
 }

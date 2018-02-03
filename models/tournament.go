@@ -3,62 +3,62 @@ package models
 import (
 	"../services"
 	"time"
-	"strconv"
 	"github.com/valyala/fasthttp"
 	"encoding/json"
+	"github.com/satori/go.uuid"
 )
 
 type Tournament struct {
-	ID int `json:"id"`
-	Title string `json:"title"`
+	ID      uuid.UUID `json:"-"`
+
+	Title   string    `json:"title"`
 	Started time.Time `json:"started"`
-	Ended time.Time	`json:"ended"`
-	About string `json:"about"`
-	Matches []*Match `json:"matches,omitempty"`
-	TeamsID []int `json:"teams_id,omitempty"`
-	Links []*Link `json:"href"`
+	Ended   time.Time `json:"ended"`
+	About   string    `json:"about"`
+
+	MatchTree *MatchesTreeForm `json:"matches_tree, omitempty"`
+	Matches []*Match           `json:"matches, omitempty"`
+	Links []Link               `json:"href, omitempty"`
 }
 
-type TournamentCreateForm struct {
-
-}
-
-func (tourney *Tournament) Validate() bool {
+func (tourney *Tournament) Validate() *serv.ErrorCode {
 	if len(tourney.Title) == 0 {
-		return false
+		return serv.NewBadRequest("Title with zero length")
 	}
-	if len(tourney.Title) > services.MaxFieldLength {
-		return false
+	if len(tourney.Title) > serv.MaxFieldLength {
+		return serv.NewBadRequest("Too long title")
 	}
 	if tourney.Ended.Before(tourney.Started) {
-		return false
+		return serv.NewBadRequest("Match ended before it begin")
 	}
 	if tourney.Ended.Equal(tourney.Started) {
-		return false
+		return serv.NewBadRequest("Start and end time of tournament is equal")
 	}
-	if len(tourney.Matches) > services.MaxMatchesInTournament {
-		return false
+	if tourney.MatchTree == nil {
+		return serv.NewBadRequest("No matches")
 	}
-	if len(tourney.Matches) == 0 {
-		return false
-	}
-	for _, value := range tourney.Matches {
-		if !value.Validate() {
-			return false
-		}
-	}
-	return true
+	return tourney.MatchTree.Validate()
 }
 
 func (tourney *Tournament) GenerateLinks() {
-	if tourney.ID != 0 {
-		link := &Link{
-			Rel: "game",
-			Href: services.Href + "/tourney/" + strconv.Itoa(tourney.ID),
-			Action: "GET",
-		}
-		tourney.Links = append(tourney.Links, link)
-	}
+
+	tourney.Links = append(tourney.Links, Link {
+		Rel: "Ссылка на турнир",
+		Href: serv.Href + "/tourney/" + tourney.ID.String(),
+		Action: "GET",
+	})
+
+	tourney.Links = append(tourney.Links, Link {
+		Rel: "Турнирная сетка",
+		Href: serv.Href + "/tourney/" + tourney.ID.String() + "/matches",
+		Action: "GET",
+	})
+
+	tourney.Links = append(tourney.Links, Link {
+		Rel: "Команды участницы",
+		Href: serv.Href + "/tourney/" + tourney.ID.String() + "/teams",
+		Action: "GET",
+	})
 }
 
 func (tourney *Tournament) WriteAsJsonResponseTo(ctx *fasthttp.RequestCtx, statusCode int) {
