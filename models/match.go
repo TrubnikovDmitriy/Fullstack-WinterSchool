@@ -29,17 +29,9 @@ type Match struct {
 	Links      []Link    `json:"href"`
 }
 
-func (match *Match) Validate() bool {
-	if match.StartTime == nil {
-		return false
-	}
-	if (match.PrevMatch1 != nil) && (match.PrevMatch2 == nil) {
-		return false
-	}
-	if (match.PrevMatch1 == nil) && (match.PrevMatch2 != nil) {
-		return false
-	}
-	return true
+func (match *Match) Validate() *serv.ErrorCode {
+
+	return nil
 }
 
 func (match *Match) GenerateLinks() {

@@ -10,7 +10,7 @@ import (
 
 func GetTourneyByID(id uuid.UUID) (*models.Tournament, *serv.ErrorCode) {
 
-	db := sharedKeyForReadByUUID(id)
+	db := sharedKeyForReadByID(id)
 	const selectTourneyByID = "SelectTourneyByID"
 	db.Prepare(selectTourneyByID,
 		"SELECT id, title, started, ended, about FROM tournaments WHERE id =$1")
@@ -47,8 +47,8 @@ func CreateTournament(tourney *models.Tournament) *serv.ErrorCode {
 	}
 
 	// Генерация UUID и ключ шардирования
-	tourney.ID = getUUID()
-	master := sharedKeyForWriteByUUID(tourney.ID)
+	tourney.ID = getID()
+	master := sharedKeyForWriteByID(tourney.ID)
 
 	// Добавление турнира
 	const createNewTournament =

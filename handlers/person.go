@@ -24,7 +24,7 @@ func CreatePerson(ctx *fasthttp.RequestCtx) {
 // GET /v1/persons/{id}
 func GetPerson(ctx *fasthttp.RequestCtx) {
 
-	id, err := getPathUUID(ctx.UserValue("person_id").(string))
+	id, err := getPathID(ctx.UserValue("person_id").(string))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return

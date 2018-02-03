@@ -8,12 +8,12 @@ import (
 // GET /v1/tourney/{tourney_id}/matches/{match_id}
 func GetMatch(ctx *fasthttp.RequestCtx) {
 
-	tourneyID, err := getPathUUID(ctx.UserValue("tourney_id").(string))
+	tourneyID, err := getPathID(ctx.UserValue("tourney_id").(string))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return
 	}
-	matchID, err := getPathUUID(ctx.UserValue("match_id").(string))
+	matchID, err := getPathID(ctx.UserValue("match_id").(string))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return

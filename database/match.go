@@ -11,7 +11,7 @@ import (
 func GetMatchByID(tourneyID uuid.UUID, matchID uuid.UUID) (*models.Match, *serv.ErrorCode) {
 
 	const selectMatchByID = "SelectMatchByID"
-	db := sharedKeyForReadByUUID(tourneyID)
+	db := sharedKeyForReadByID(tourneyID)
 	db.Prepare(selectMatchByID,
 		"SELECT team_id_1, team_id_2, " +
 			"team_score_1, team_score_2, " +
@@ -51,7 +51,7 @@ func GetMatchByID(tourneyID uuid.UUID, matchID uuid.UUID) (*models.Match, *serv.
 
 func CreateMatches(matches []models.Match, sharedKey uuid.UUID) *serv.ErrorCode {
 
-	master := sharedKeyForWriteByUUID(sharedKey)
+	master := sharedKeyForWriteByID(sharedKey)
 
 	const prepareInsert = "insertMatches"
 	master.Prepare(prepareInsert,
@@ -89,7 +89,7 @@ func GetTournamentGrid(id uuid.UUID) (*models.MatchesArrayForm, *serv.ErrorCode)
 
 	const selectTourneyByID = "SelectTourneyByID"
 
-	db := sharedKeyForReadByUUID(id)
+	db := sharedKeyForReadByID(id)
 	db.Prepare(selectTourneyByID,
 		"SELECT id, team_id_1, team_id_2, " +
 			"team_score_1, team_score_2, " +

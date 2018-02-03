@@ -5,6 +5,7 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+
 type Link struct {
 	Rel 	string `json:"rel"`
 	Href 	string `json:"href"`
@@ -12,7 +13,7 @@ type Link struct {
 }
 
 type Validator interface {
-	Validate() bool
+	Validate() *serv.ErrorCode
 }
 
 type Linker interface {

@@ -7,7 +7,7 @@ import (
 )
 
 
-func getPathUUID(strID string) (uuid.UUID, *serv.ErrorCode) {
+func getPathID(strID string) (uuid.UUID, *serv.ErrorCode) {
 	id, err := uuid.FromString(strID)
 	if err != nil {
 		return uuid.Nil, &serv.ErrorCode{

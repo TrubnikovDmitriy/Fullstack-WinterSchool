@@ -11,7 +11,7 @@ import (
 func GetGameByID(id uuid.UUID) (*models.Game, *serv.ErrorCode) {
 
 	const selectGameByID = "SelectGameByID"
-	db := sharedKeyForReadByUUID(id)
+	db := sharedKeyForReadByID(id)
 	db.Prepare(selectGameByID, "SELECT title, about FROM games WHERE id = $1")
 
 	game := models.Game{ID: id}
@@ -44,8 +44,8 @@ func CreateGame(game *models.Game) *serv.ErrorCode {
 
 
 	// Генерация ID и ключ шардирования
-	game.ID = getUUID()
-	master := sharedKeyForWriteByUUID(game.ID)
+	game.ID = getID()
+	master := sharedKeyForWriteByID(game.ID)
 
 	// Добавление
 	const createNewGame = "CreateGame"

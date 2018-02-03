@@ -15,7 +15,7 @@ import (
 func GetPlayerByIDs(teamID uuid.UUID, playerID uuid.UUID) (*models.Player, *serv.ErrorCode) {
 
 	const selectPlayerByID = "SelectPlayerByID"
-	db := sharedKeyForReadByUUID(teamID)
+	db := sharedKeyForReadByID(teamID)
 	db.Prepare(selectPlayerByID,
 		"SELECT person_id, nickname, team_name, retire " +
 			"FROM players WHERE id = $1;")
@@ -34,7 +34,7 @@ func GetPlayerByIDs(teamID uuid.UUID, playerID uuid.UUID) (*models.Player, *serv
 
 func GetPlayersOfTeam(teamID uuid.UUID) ([]*models.Player, *serv.ErrorCode) {
 
-	db := sharedKeyForReadByUUID(teamID)
+	db := sharedKeyForReadByID(teamID)
 	const getPlayersByTeamID = "GetPlayersByTeamID"
 	db.Prepare(getPlayersByTeamID,
 		"SELECT id, person_id, nickname, team_name " +
@@ -77,7 +77,7 @@ func CreatePlayer(player *models.Player) *serv.ErrorCode {
 
 	// Проверка приглашений для данного игрока
 	const checkInvite = "CheckInvite"
-	db := sharedKeyForReadByUUID(player.PersonID)
+	db := sharedKeyForReadByID(player.PersonID)
 	db.Prepare(checkInvite, "SELECT team_name FROM teams " +
 		"WHERE person_id = $1 AND team_id = $2")
 
@@ -96,8 +96,8 @@ func CreatePlayer(player *models.Player) *serv.ErrorCode {
 
 
 	// Генерация ID и шардирование
-	player.ID = getUUID()
-	db = sharedKeyForWriteByUUID(player.TeamID)
+	player.ID = getID()
+	db = sharedKeyForWriteByID(player.TeamID)
 	const createPlayer = "CreatePlayer"
 	db.Prepare(createPlayer,
 		"INSERT INTO players(id, person_id, nickname, team_id, team_name) " +
@@ -113,7 +113,7 @@ func CreatePlayer(player *models.Player) *serv.ErrorCode {
 
 
 	// Удалить инвайт
-	db = sharedKeyForWriteByUUID(player.PersonID)
+	db = sharedKeyForWriteByID(player.PersonID)
 	db.Exec("DELETE FROM teams WHERE person_id = $1", player.PersonID)
 
 	return nil

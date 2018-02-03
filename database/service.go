@@ -114,6 +114,7 @@ func initPostgresConnectionPool(config pgx.ConnConfig) *pgx.ConnPool {
 	return pgConnPool
 }
 
+
 func checkError(err error) *serv.ErrorCode {
 	if err == pgx.ErrNoRows {
 		return &serv.ErrorCode{ Code: fasthttp.StatusNotFound }
@@ -122,20 +123,11 @@ func checkError(err error) *serv.ErrorCode {
 	return &serv.ErrorCode{ Code: fasthttp.StatusInternalServerError }
 }
 
-
-func sharedKeyForWriteByID(teamID int) *pgx.ConnPool {
-	if teamID % 2 != 0 {
-		return master1
-	} else {
-		return master2
-	}
-}
-
-func sharedKeyForWriteByUUID(uuid uuid.UUID) *pgx.ConnPool {
+func sharedKeyForWriteByID(uuid uuid.UUID) *pgx.ConnPool {
 	return masterConnectionPool[uuid[0] % serv.NumberOfShards]
 }
 
-func sharedKeyForReadByUUID(uuid uuid.UUID) *pgx.ConnPool {
+func sharedKeyForReadByID(uuid uuid.UUID) *pgx.ConnPool {
 	dbID := uuid[0] % serv.NumberOfShards
 	return choiceMasterSlave(masterConnectionPool[dbID], slaveConnectionPool[dbID])
 }
@@ -148,26 +140,13 @@ func choiceMasterSlave(masterN *pgx.ConnPool, slaveN *pgx.ConnPool) *pgx.ConnPoo
 	}
 }
 
-
-func getID(sql string) int {
-
-	var newID int
-
-	// Обращаемся к обеим базам, для инкрементирования счетчика ID
-	master1.QueryRow(sql).Scan(&newID)
-	master2.QueryRow(sql)
-
-	return newID
-}
-
-func getUUID() uuid.UUID {
+func getID() uuid.UUID {
 	id, err := uuid.NewV4()
 	if err != nil {
 		fmt.Print(err)
 	}
 	return id
 }
-
 
 func verifyUnique(sql string, ptrDest interface{}, args string) error {
 

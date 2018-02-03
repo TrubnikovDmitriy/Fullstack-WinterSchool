@@ -10,12 +10,12 @@ import (
 // GET /v1/teams/{team_id}/players/{player_id}
 func GetPlayer(ctx *fasthttp.RequestCtx) {
 
-	teamID, err := getPathUUID(ctx.UserValue("team_id").(string))
+	teamID, err := getPathID(ctx.UserValue("team_id").(string))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return
 	}
-	playerID, err := getPathUUID(ctx.UserValue("player_id").(string))
+	playerID, err := getPathID(ctx.UserValue("player_id").(string))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return
@@ -33,7 +33,7 @@ func GetPlayer(ctx *fasthttp.RequestCtx) {
 // GET /v1/team/{team_id}/players
 func GetTeamPlayers(ctx *fasthttp.RequestCtx) {
 
-	teamID, err := getPathUUID(ctx.UserValue("team_id").(string))
+	teamID, err := getPathID(ctx.UserValue("team_id").(string))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return

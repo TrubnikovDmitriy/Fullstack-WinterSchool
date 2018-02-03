@@ -14,14 +14,13 @@ type Team struct {
 	Links []Link 	`json:"href"`
 }
 
-func (team *Team) Validate() bool {
-	if len(team.Name) == 0 {
-		return false
+func (team *Team) Validate() *serv.ErrorCode {
+
+	err := fieldLengthValidate(team.Name, "team name")
+	if err != nil {
+		return err
 	}
-	if len(team.Name) > serv.MaxFieldLength {
-		return false
-	}
-	return true
+	return nil
 }
 
 func (team *Team) GenerateLinks() {

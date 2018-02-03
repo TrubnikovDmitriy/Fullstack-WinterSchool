@@ -11,7 +11,7 @@ import (
 // GET /v1/tourney/{id}
 func GetTournamentByID(ctx *fasthttp.RequestCtx) {
 
-	id, err := getPathUUID(ctx.UserValue("tourney_id").(string))
+	id, err := getPathID(ctx.UserValue("tourney_id").(string))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return
@@ -42,7 +42,7 @@ func CreateTournament(ctx *fasthttp.RequestCtx) {
 // GET /v1/tourney/{id}/matches
 func GetTournamentGrid(ctx *fasthttp.RequestCtx) {
 
-	id, err := getPathUUID(ctx.UserValue("tourney_id").(string))
+	id, err := getPathID(ctx.UserValue("tourney_id").(string))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return

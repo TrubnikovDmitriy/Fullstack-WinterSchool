@@ -27,8 +27,8 @@ func CreatePerson(person *models.Person) *serv.ErrorCode {
 		}
 	}
 
-	person.ID = getUUID()
-	master := sharedKeyForWriteByUUID(person.ID)
+	person.ID = getID()
+	master := sharedKeyForWriteByID(person.ID)
 	const insertPerson = "InsertPerson"
 	master.Prepare(insertPerson,
 		"INSERT INTO persons(id, first_name, last_name, about, mail, passw) " +
@@ -49,7 +49,7 @@ func CreatePerson(person *models.Person) *serv.ErrorCode {
 func GetPerson(id uuid.UUID) (*models.Person, *serv.ErrorCode) {
 
 	const selectPersonByID = "SelectPersonByID"
-	db := sharedKeyForReadByUUID(id)
+	db := sharedKeyForReadByID(id)
 	db.Prepare(selectPersonByID,
 		"SELECT first_name, last_name, mail, about FROM persons WHERE id = $1")
 

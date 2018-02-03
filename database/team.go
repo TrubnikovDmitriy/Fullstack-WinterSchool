@@ -11,7 +11,7 @@ import (
 
 func GetTeamByID(teamID uuid.UUID) (*models.Team, *serv.ErrorCode) {
 
-	db := sharedKeyForReadByUUID(teamID)
+	db := sharedKeyForReadByID(teamID)
 	const selectTeamByID = "SelectTeamByID"
 	db.Prepare(selectTeamByID,"SELECT team_name, about FROM teams WHERE id = $1;")
 
@@ -26,8 +26,9 @@ func GetTeamByID(teamID uuid.UUID) (*models.Team, *serv.ErrorCode) {
 
 func CreateTeam(team *models.Team) *serv.ErrorCode {
 
-	if !team.Validate() {
-		return serv.NewBadRequest("Bad request")
+	errorCode := team.Validate()
+	if errorCode != nil {
+		return errorCode
 	}
 
 	// Проверка на уникальность имени
@@ -43,9 +44,9 @@ func CreateTeam(team *models.Team) *serv.ErrorCode {
 	}
 
 	// Генерация ID и шардирование
-	team.ID = getUUID()
+	team.ID = getID()
 	const createTeam = "CreateTeam"
-	master := sharedKeyForWriteByUUID(team.ID)
+	master := sharedKeyForWriteByID(team.ID)
 	master.Prepare(createTeam,
 		"INSERT INTO teams(id, team_name, about) VALUES ($1, $2, $3);")
 	
