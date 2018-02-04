@@ -87,10 +87,10 @@ func CreateMatches(matches []models.Match, sharedKey uuid.UUID) *serv.ErrorCode 
 
 func GetTournamentGrid(id uuid.UUID) (*models.MatchesArrayForm, *serv.ErrorCode) {
 
-	const selectTourneyByID = "SelectTourneyByID"
+	const selectGridByTourneyID = "SelectGridByTourneyID"
 
 	db := sharedKeyForReadByID(id)
-	db.Prepare(selectTourneyByID,
+	db.Prepare(selectGridByTourneyID,
 		"SELECT id, team_id_1, team_id_2, " +
 			"team_score_1, team_score_2, " +
 			"start_time, end_time, link," +
@@ -100,7 +100,7 @@ func GetTournamentGrid(id uuid.UUID) (*models.MatchesArrayForm, *serv.ErrorCode)
 
 	var grid models.MatchesArrayForm
 
-	rows, err := db.Query(selectTourneyByID, id)
+	rows, err := db.Query(selectGridByTourneyID, id)
 	defer rows.Close()
 	if err != nil {
 		return nil, checkError(err)

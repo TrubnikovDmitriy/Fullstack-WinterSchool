@@ -22,17 +22,24 @@ type Tournament struct {
 }
 
 func (tourney *Tournament) Validate() *serv.ErrorCode {
-	if len(tourney.Title) == 0 {
-		return serv.NewBadRequest("Title with zero length")
+	err := fieldLengthValidate(tourney.Title, "title")
+	if err != nil {
+		return err
 	}
-	if len(tourney.Title) > serv.MaxFieldLength {
-		return serv.NewBadRequest("Too long title")
+	err = fieldLengthValidate(tourney.About, "about-field")
+	if err != nil {
+		return err
 	}
+
 	if tourney.Ended.Before(tourney.Started) {
 		return serv.NewBadRequest("Match ended before it begin")
 	}
 	if tourney.Ended.Equal(tourney.Started) {
 		return serv.NewBadRequest("Start and end time of tournament is equal")
+	}
+	if tourney.Started.Before(
+		time.Date(1900, 0, 0,0,0,0,0, time.UTC)) {
+		return serv.NewBadRequest("The tournament started before 1900 year")
 	}
 	if tourney.MatchTree == nil {
 		return serv.NewBadRequest("No matches")

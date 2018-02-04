@@ -18,14 +18,13 @@ func getNewPerson() *models.Person {
 
 	tg := text_generator.New()
 	id, _ := uuid.NewV4()
-	mail := strings.Split(id.String(), "-")[1]
-	password := strings.Split(id.String(), "-")[0]
+	postfixes := strings.Split(id.String(), "-")
 
 	person := models.Person {
 		FirstName: tg.Generate(FirstNameTemplate),
-		LastName: tg.Generate(LastNameTemplate),
-		Mail: tg.Generate(LastNameTemplate) + "_" + mail + tg.Generate(MailsTemplate),
-		Password: password,
+		LastName:  tg.Generate(LastNameTemplate),
+		Mail:      tg.Generate(LastNameTemplate) + "_" + postfixes[1] + tg.Generate(MailsTemplate),
+		Password:  postfixes[0],
 	}
 
 	return &person
@@ -115,17 +114,17 @@ func TestGetPerson(t *testing.T) {
 
 	if receivedPerson.FirstName != originalPerson.FirstName {
 		t.Errorf("Received person has another first name\n" +
-			"Recieved person ID:\t%s\n,Original person ID\t%s\n",
+			"Recieved person ID:\t%s,\nOriginal person ID:\t%s\n",
 			receivedPerson.ID.String(), originalPerson.ID.String())
 	}
 	if receivedPerson.LastName != originalPerson.LastName {
 		t.Errorf("Received person has another last name\n" +
-			"Recieved person ID:\t%s\n,Original person ID\t%s\n",
+			"Recieved person ID:\t%s,\nOriginal person ID:\t%s\n",
 			receivedPerson.ID.String(), originalPerson.ID.String())
 	}
 	if receivedPerson.Mail != originalPerson.Mail {
 		t.Errorf("Received person has another mail name\n" +
-			"Recieved person ID:\t%s\n,Original person ID\t%s\n",
+			"Recieved person ID:\t%s,\nOriginal person ID:\t%s\n",
 			receivedPerson.ID.String(), originalPerson.ID.String())
 	}
 }
