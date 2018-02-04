@@ -15,11 +15,14 @@ type Game struct {
 }
 
 func (game *Game) Validate() *serv.ErrorCode {
-	if len(game.Title) == 0 {
-		return serv.NewBadRequest("Title is zero length")
+	err := fieldLengthValidate(game.Title, "title")
+	if err != nil {
+		return err
 	}
-	if len(game.Title) > serv.MaxFieldLength {
-		return serv.NewBadRequest("Too long title")
+
+	err = fieldLengthValidate(game.About, "about-field")
+	if err != nil {
+		return err
 	}
 	return nil
 }

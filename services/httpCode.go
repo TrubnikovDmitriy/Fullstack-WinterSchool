@@ -4,6 +4,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"encoding/json"
 	"log"
+	"strconv"
 )
 
 type ErrorCode struct {
@@ -33,6 +34,17 @@ func NewServerError(err error) *ErrorCode {
 		Code: fasthttp.StatusInternalServerError,
 		Message: fasthttp.StatusMessage(fasthttp.StatusInternalServerError),
 	}
+}
+
+func (err *ErrorCode) String() string {
+
+	printString := "Error code: " + strconv.Itoa(err.Code) +
+		"\nError message: " + err.Message + "\n"
+
+	if len(err.Link) != 0 {
+		printString += "Link: " + err.Link + "\n"
+	}
+	return printString + "\n"
 }
 
 func (httpCode *ErrorCode) WriteAsJsonResponseTo(ctx *fasthttp.RequestCtx) {
