@@ -45,6 +45,10 @@ func TestCreateGameWithoutTitle(t *testing.T) {
 	err := db.CreateGame(game)
 	if err == nil {
 		t.Error("Game without title has been created")
+		return
+	}
+	if err.Code != fasthttp.StatusBadRequest {
+		t.Errorf("Unexpectable error for creating game with incorrect fields:\n%s", err)
 	}
 }
 
@@ -53,7 +57,11 @@ func TestCreateGameWithTooLongTitle(t *testing.T) {
 	game.Title = "This title is " + strings.Repeat("very, ", 10) + "very long"
 	err := db.CreateGame(game)
 	if err == nil {
-		t.Errorf("Game with too title has been created\ntitle: '%s'", game.Title)
+		t.Errorf("Game with too long title has been created\nTitle: '%s'", game.Title)
+		return
+	}
+	if err.Code != fasthttp.StatusBadRequest {
+		t.Errorf("Unexpectable error for creating game with incorrect fields:\n%s", err)
 	}
 }
 
@@ -63,6 +71,10 @@ func TestCreateGameWithoutAbout(t *testing.T) {
 	err := db.CreateGame(game)
 	if err == nil {
 		t.Error("Game without about-field has been created")
+		return
+	}
+	if err.Code != fasthttp.StatusBadRequest {
+		t.Errorf("Unexpectable error for creating game with incorrect fields:\n%s", err)
 	}
 }
 
@@ -72,6 +84,10 @@ func TestCreateGameWithTooLongAbout(t *testing.T) {
 	err := db.CreateGame(game)
 	if err == nil {
 		t.Errorf("Game with too about text has been created\ntitle: '%s'", game.Title)
+		return
+	}
+	if err.Code != fasthttp.StatusBadRequest {
+		t.Errorf("Unexpectable error for creating game with incorrect fields:\n%s", err)
 	}
 }
 
@@ -80,6 +96,7 @@ func TestCreateGameConflict(t *testing.T) {
 	err := db.CreateGame(game)
 	if err == nil {
 		t.Errorf("Created two identical games (UUID: %s)", game.ID.String())
+		return
 		return
 	}
 	if err.Code != fasthttp.StatusConflict {
@@ -118,6 +135,10 @@ func TestGetTheAbsentGame(t *testing.T) {
 		} else {
 			t.Errorf("Got a non-existing game\nrequestID:\t%s\n", id.String())
 		}
+		return
+	}
+	if err.Code != fasthttp.StatusNotFound {
+		t.Errorf("Unexpectable error for getting non-existing game:\n%s", err)
 	}
 }
 

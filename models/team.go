@@ -20,6 +20,10 @@ func (team *Team) Validate() *serv.ErrorCode {
 	if err != nil {
 		return err
 	}
+	err = fieldLengthValidate(team.About, "about-field")
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
