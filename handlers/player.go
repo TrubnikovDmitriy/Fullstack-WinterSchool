@@ -22,7 +22,7 @@ func GetPlayer(ctx *fasthttp.RequestCtx) {
 	}
 
 
-	player, err := database.GetPlayerByIDs(teamID, playerID)
+	player, err := database.GetPlayerByID(teamID, playerID)
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 	} else {

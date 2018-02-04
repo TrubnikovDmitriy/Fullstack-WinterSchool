@@ -2,6 +2,7 @@ package unit
 
 import (
 	db "../../database"
+	. "../service"
 	"../../models"
 	"testing"
 	"github.com/satori/go.uuid"
@@ -9,30 +10,9 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func getNewTeam() *models.Team {
-	id, _ := uuid.NewV1()
-	uniqueSuffix := strings.Split(id.String(), "-")[0]
-	team := models.Team {
-		Name: "Name-" + uniqueSuffix,
-		About: "A few words about this amazing team",
-	}
-
-	return &team
-}
-
-func createNewTeam() *models.Team {
-	teamOriginal := getNewTeam()
-
-	teamToDataBase := *teamOriginal
-	db.CreateTeam(&teamToDataBase)
-
-	teamOriginal.ID = teamToDataBase.ID
-	return teamOriginal
-}
-
 
 func TestCreateTeamHappyPath(t *testing.T) {
-	team := getNewTeam()
+	team := GetNewTeam()
 	err := db.CreateTeam(team)
 	if err != nil {
 		t.Error("Happy path for creating team failed: " + err.Message)
@@ -40,7 +20,7 @@ func TestCreateTeamHappyPath(t *testing.T) {
 }
 
 func TestCreateTeamWithoutName(t *testing.T) {
-	team := getNewTeam()
+	team := GetNewTeam()
 	team.Name = ""
 	err := db.CreateTeam(team)
 	if err == nil {
@@ -53,7 +33,7 @@ func TestCreateTeamWithoutName(t *testing.T) {
 }
 
 func TestCreateTeamWithTooLongName(t *testing.T) {
-	team := getNewTeam()
+	team := GetNewTeam()
 	team.Name = "This team name is " + strings.Repeat("very, ", 10) + "very long"
 	err := db.CreateTeam(team)
 	if err == nil {
@@ -66,7 +46,7 @@ func TestCreateTeamWithTooLongName(t *testing.T) {
 }
 
 func TestCreateTeamWithoutAbout(t *testing.T) {
-	team := getNewTeam()
+	team := GetNewTeam()
 	team.About = ""
 	err := db.CreateTeam(team)
 	if err == nil {
@@ -79,7 +59,7 @@ func TestCreateTeamWithoutAbout(t *testing.T) {
 }
 
 func TestCreateTeamWithTooLongAbout(t *testing.T) {
-	team := getNewTeam()
+	team := GetNewTeam()
 	team.Name = "This about is " + strings.Repeat("very, ", 10) + "very long"
 	err := db.CreateTeam(team)
 	if err == nil {
@@ -92,7 +72,7 @@ func TestCreateTeamWithTooLongAbout(t *testing.T) {
 }
 
 func TestCreateTeamDuplicate(t *testing.T) {
-	team := createNewTeam()
+	team := CreateNewTeam()
 	err := db.CreateTeam(team)
 	if err == nil {
 		t.Errorf("Created two identical teams (UUID: %s)", team.ID.String())
@@ -105,7 +85,7 @@ func TestCreateTeamDuplicate(t *testing.T) {
 
 
 func TestGetTeamHappy(t *testing.T) {
-	teamOriginal := createNewTeam()
+	teamOriginal := CreateNewTeam()
 	team, err := db.GetTeamByID(teamOriginal.ID)
 	if err != nil {
 		t.Errorf("Error when getting team:\n%s", err)
@@ -144,7 +124,7 @@ func TestGetTheAbsentTeam(t *testing.T) {
 func TestGetFewTeams(t *testing.T) {
 	var teams [5]*models.Team
 	for i := range teams {
-		teams[i] = createNewTeam()
+		teams[i] = CreateNewTeam()
 	}
 	for _, team := range teams {
 		getTeam, err := db.GetTeamByID(team.ID)

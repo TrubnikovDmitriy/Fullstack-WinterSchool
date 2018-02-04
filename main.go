@@ -10,6 +10,7 @@ import (
 var router *fasthttprouter.Router
 
 func init() {
+
 	router = fasthttprouter.New()
 
 	// persons
@@ -37,7 +38,7 @@ func init() {
 	router.GET("/v1/games/:id", handlers.GetGame)
 	router.POST("/v1/games", handlers.CreateGame)
 
-	// test
+	// TODO delete test
 	router.GET("/test", database.Test)
 }
 

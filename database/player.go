@@ -12,7 +12,7 @@ import (
 )
 
 
-func GetPlayerByIDs(teamID uuid.UUID, playerID uuid.UUID) (*models.Player, *serv.ErrorCode) {
+func GetPlayerByID(teamID uuid.UUID, playerID uuid.UUID) (*models.Player, *serv.ErrorCode) {
 
 	const selectPlayerByID = "SelectPlayerByID"
 	db := sharedKeyForReadByID(teamID)

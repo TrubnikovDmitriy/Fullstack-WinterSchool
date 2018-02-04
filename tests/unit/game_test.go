@@ -2,6 +2,7 @@ package unit
 
 import (
 	db "../../database"
+	. "../service"
 	"../../models"
 	"testing"
 	"github.com/satori/go.uuid"
@@ -9,30 +10,9 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func getNewGame() *models.Game {
-	id, _ := uuid.NewV1()
-	uniqueSuffix := strings.Split(id.String(), "-")[0]
-	game := models.Game {
-		Title: "Title-" + uniqueSuffix,
-		About: "Some text about useful things",
-	}
-
-	return &game
-}
-
-func createNewGame() *models.Game {
-	gameOriginal := getNewGame()
-
-	gameToDataBase := *gameOriginal
-	db.CreateGame(&gameToDataBase)
-
-	gameOriginal.ID = gameToDataBase.ID
-	return gameOriginal
-}
-
 
 func TestCreateGameHappyPath(t *testing.T) {
-	game := getNewGame()
+	game := GetNewGame()
 	err := db.CreateGame(game)
 	if err != nil {
 		t.Error("Happy path for creating game failed: " + err.Message)
@@ -40,7 +20,7 @@ func TestCreateGameHappyPath(t *testing.T) {
 }
 
 func TestCreateGameWithoutTitle(t *testing.T) {
-	game := getNewGame()
+	game := GetNewGame()
 	game.Title = ""
 	err := db.CreateGame(game)
 	if err == nil {
@@ -53,7 +33,7 @@ func TestCreateGameWithoutTitle(t *testing.T) {
 }
 
 func TestCreateGameWithTooLongTitle(t *testing.T) {
-	game := getNewGame()
+	game := GetNewGame()
 	game.Title = "This title is " + strings.Repeat("very, ", 10) + "very long"
 	err := db.CreateGame(game)
 	if err == nil {
@@ -66,7 +46,7 @@ func TestCreateGameWithTooLongTitle(t *testing.T) {
 }
 
 func TestCreateGameWithoutAbout(t *testing.T) {
-	game := getNewGame()
+	game := GetNewGame()
 	game.About = ""
 	err := db.CreateGame(game)
 	if err == nil {
@@ -79,7 +59,7 @@ func TestCreateGameWithoutAbout(t *testing.T) {
 }
 
 func TestCreateGameWithTooLongAbout(t *testing.T) {
-	game := getNewGame()
+	game := GetNewGame()
 	game.Title = "This about is " + strings.Repeat("very, ", 10) + "very long"
 	err := db.CreateGame(game)
 	if err == nil {
@@ -92,7 +72,7 @@ func TestCreateGameWithTooLongAbout(t *testing.T) {
 }
 
 func TestCreateGameConflict(t *testing.T) {
-	game := createNewGame()
+	game := CreateNewGame()
 	err := db.CreateGame(game)
 	if err == nil {
 		t.Errorf("Created two identical games (UUID: %s)", game.ID.String())
@@ -106,7 +86,7 @@ func TestCreateGameConflict(t *testing.T) {
 
 
 func TestGetGameHappy(t *testing.T) {
-	gameOriginal := createNewGame()
+	gameOriginal := CreateNewGame()
 	game, err := db.GetGameByID(gameOriginal.ID)
 	if err != nil {
 		t.Errorf("Error when getting game:\n%s", err)
@@ -145,7 +125,7 @@ func TestGetTheAbsentGame(t *testing.T) {
 func TestGetFewGames(t *testing.T) {
 	var games [5]*models.Game
 	for i := range games {
-		games[i] = createNewGame()
+		games[i] = CreateNewGame()
 	}
 	for _, game := range games {
 		getGame, err := db.GetGameByID(game.ID)

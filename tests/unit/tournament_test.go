@@ -2,65 +2,16 @@ package unit
 
 import (
 	db "../../database"
-	. "../../models"
-	"github.com/satori/go.uuid"
-	"strings"
+	. "../service"
 	"time"
-	"math"
 	"testing"
 	"github.com/valyala/fasthttp"
 )
 
-
-// Функция для создания дерева матчей заданной глубины (односторонняя связь parent->child),
-// возвращает массив из связанных между собой элементов (нулевой элемент - корень дерева)
-func getNewMatches(deep int) []MatchesTreeForm {
-
-	nodesCount := int(math.Pow(2, float64(deep))) - 1
-	nodes := make([]MatchesTreeForm, nodesCount)
-	times := time.Now()
-
-	for i := 1; i <= nodesCount; i++ {
-		if i <= nodesCount / 2 {
-			nodes[i - 1].LeftChild = &nodes[i * 2 - 1]
-			nodes[i - 1].RightChild = &nodes[i * 2]
-		}
-		nodes[i - 1].StartTime = times.Add(time.Duration(nodesCount - i))
-	}
-	return nodes
-}
-
-func getNewTournament() *Tournament {
-
-	id, _ := uuid.NewV4()
-	postfix := strings.Split(id.String(), "-")
-	timeNow := time.Now()
-
-	tourney := Tournament {
-		Title: "Tournament title - " + postfix[0],
-		Started: timeNow,
-		Ended: timeNow.AddDate(0, 3,0),
-		About: postfix[4],
-	}
-
-	return &tourney
-}
-
-func createNewTournament() *Tournament {
-
-	originalTourney := getNewTournament()
-	originalTourney.MatchTree = &getNewMatches(3)[0]
-
-	tourneyForDatabase := *originalTourney
-	db.CreateTournament(&tourneyForDatabase)
-
-	return originalTourney
-}
-
 func TestCreateTourneyHappyPath(t *testing.T) {
 
-	tourney := getNewTournament()
-	matches := getNewMatches(3)
+	tourney := GetNewTournament()
+	matches := GetNewMatches(3)
 
 	tourney.MatchTree = &matches[0]
 
@@ -72,7 +23,7 @@ func TestCreateTourneyHappyPath(t *testing.T) {
 
 func TestCreateTourneyEmptyMatch(t *testing.T) {
 
-	tourney := getNewTournament()
+	tourney := GetNewTournament()
 
 	err := db.CreateTournament(tourney)
 	if err == nil {
@@ -86,8 +37,8 @@ func TestCreateTourneyEmptyMatch(t *testing.T) {
 
 func TestCreateTourneyWithoutTitle(t *testing.T) {
 
-	tourney := getNewTournament()
-	tourney.MatchTree = &getNewMatches(3)[0]
+	tourney := GetNewTournament()
+	tourney.MatchTree = &GetNewMatches(3)[0]
 	tourney.Title = ""
 
 	err := db.CreateTournament(tourney)
@@ -102,8 +53,8 @@ func TestCreateTourneyWithoutTitle(t *testing.T) {
 
 func TestCreateTourneyWithoutAbout(t *testing.T) {
 
-	tourney := getNewTournament()
-	tourney.MatchTree = &getNewMatches(3)[0]
+	tourney := GetNewTournament()
+	tourney.MatchTree = &GetNewMatches(3)[0]
 	tourney.About = ""
 
 	err := db.CreateTournament(tourney)
@@ -118,8 +69,8 @@ func TestCreateTourneyWithoutAbout(t *testing.T) {
 
 func TestCreateTourneyWithIncorrectData(t *testing.T) {
 
-	tourney := getNewTournament()
-	tourney.MatchTree = &getNewMatches(3)[0]
+	tourney := GetNewTournament()
+	tourney.MatchTree = &GetNewMatches(3)[0]
 	tourney.Started = tourney.Ended.Add(1)
 
 	err := db.CreateTournament(tourney)
@@ -134,8 +85,8 @@ func TestCreateTourneyWithIncorrectData(t *testing.T) {
 
 func TestCreateTourneyWithEmptyData(t *testing.T) {
 
-	tourney := getNewTournament()
-	tourney.MatchTree = &getNewMatches(3)[0]
+	tourney := GetNewTournament()
+	tourney.MatchTree = &GetNewMatches(3)[0]
 	tourney.Started = time.Time{}
 
 	err := db.CreateTournament(tourney)
@@ -149,8 +100,8 @@ func TestCreateTourneyWithEmptyData(t *testing.T) {
 }
 
 func TestCreateTooManyMatches(t *testing.T) {
-	tourney := getNewTournament()
-	matches := getNewMatches(10)
+	tourney := GetNewTournament()
+	matches := GetNewMatches(10)
 
 	tourney.MatchTree = &matches[0]
 
@@ -165,8 +116,8 @@ func TestCreateTooManyMatches(t *testing.T) {
 }
 
 func TestCreateNotBinaryMatchTree(t *testing.T) {
-	tourney := getNewTournament()
-	matches := getNewMatches(3)
+	tourney := GetNewTournament()
+	matches := GetNewMatches(3)
 	matches[2].RightChild = nil
 
 	tourney.MatchTree = &matches[0]
@@ -183,7 +134,7 @@ func TestCreateNotBinaryMatchTree(t *testing.T) {
 
 func TestCreateTourneyDuplicate(t *testing.T) {
 
-	tourney := createNewTournament()
+	tourney := CreateNewTournament()
 	db.CreateTournament(tourney)
 
 	err := db.CreateTournament(tourney)
@@ -198,8 +149,8 @@ func TestCreateTourneyDuplicate(t *testing.T) {
 
 func TestGetTourney(t *testing.T) {
 
-	original := getNewTournament()
-	original.MatchTree = &getNewMatches(3)[0]
+	original := GetNewTournament()
+	original.MatchTree = &GetNewMatches(3)[0]
 	err := db.CreateTournament(original)
 
 	received, err := db.GetTourneyByID(original.ID)
@@ -232,10 +183,11 @@ func TestGetTourney(t *testing.T) {
 	}
 }
 
-func TestGetTourneyGrid(t *testing.T) {
+func TestGetTourneyGridSymmetric(t *testing.T) {
 
-	tourney := getNewTournament()
-	tourney.MatchTree = &getNewMatches(2)[0]
+	tourney := GetNewTournament()
+	matches := GetNewMatches(2)
+	tourney.MatchTree = &matches[0]
 	db.CreateTournament(tourney)
 
 	arrayMatches, err := db.GetTournamentGrid(tourney.ID)
@@ -249,6 +201,11 @@ func TestGetTourneyGrid(t *testing.T) {
 			t.Errorf("Matche obtains to another tournament " +
 					"(wrong tourney ID = %s)", match.TourneyID)
 		}
+	}
+
+	if len(matches) != len(arrayMatches.Array) {
+		t.Errorf("Wrong number of match (%d != %d)",
+			len(matches), len(arrayMatches.Array))
 	}
 
 	// Родительская нода
@@ -284,6 +241,34 @@ func TestGetTourneyGrid(t *testing.T) {
 		t.Errorf("Left right node is incorrect")
 	}
 
+}
+
+func TestGetTourneyGridAsymmetric(t *testing.T) {
+
+	tourney := GetNewTournament()
+	matches := GetNewMatches(4)
+	matches[1].RightChild = nil
+	matches[1].LeftChild = nil
+	tourney.MatchTree = &matches[0]
+	db.CreateTournament(tourney)
+
+	arrayMatches, err := db.GetTournamentGrid(tourney.ID)
+	if err != nil {
+		t.Errorf("Can't get tournament grid:\n%s", err)
+		return
+	}
+
+	for _, match := range arrayMatches.Array {
+		if match.TourneyID != tourney.ID {
+			t.Errorf("Matche obtains to another tournament " +
+				"(wrong tourney ID = %s)", match.TourneyID)
+		}
+	}
+
+	if len(arrayMatches.Array) != 9 {
+		t.Errorf("Wrong number of match in asymmetrical grid (9 != %d)",
+				len(arrayMatches.Array))
+	}
 }
 
 

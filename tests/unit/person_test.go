@@ -2,53 +2,21 @@ package unit
 
 import (
 	db "../../database"
-	"../../models"
-	"strings"
-	"github.com/satori/go.uuid"
-	"github.com/liderman/text-generator"
+	. "../service"
 	"testing"
 	"github.com/valyala/fasthttp"
 )
 
-func getNewPerson() *models.Person {
-
-	var FirstNameTemplate string = "{Vasya|Peter|Nikita|Sasha|Dmitriy|Enakentiy|John|Masha|Natasha|Tony}"
-	var LastNameTemplate string = "{Silaev|Kuzmin|Krasnov|Sitnikov|Smirnov|Gorbenko|Trubnikov|Smirnova}"
-	var MailsTemplate string = "{@mail.ru|@yandex.ru|@gmail.com|@rambler.com}"
-
-	tg := text_generator.New()
-	id, _ := uuid.NewV4()
-	postfixes := strings.Split(id.String(), "-")
-
-	person := models.Person {
-		FirstName: tg.Generate(FirstNameTemplate),
-		LastName:  tg.Generate(LastNameTemplate),
-		Mail:      tg.Generate(LastNameTemplate) + "_" + postfixes[1] + tg.Generate(MailsTemplate),
-		Password:  postfixes[0],
-	}
-
-	return &person
-}
-
-func createNewPerson() *models.Person {
-
-	original := getNewPerson()
-	forDatabase := *original
-	db.CreatePerson(&forDatabase)
-
-	return original
-}
-
 
 func TestCreatePersonHappyPath(t *testing.T) {
-	err := db.CreatePerson(getNewPerson())
+	err := db.CreatePerson(GetNewPerson())
 	if err != nil {
 		t.Errorf("Error in create simple person\n%s", err)
 	}
 }
 
 func TestCreatePersonWithoutFirstName(t *testing.T) {
-	person := getNewPerson()
+	person := GetNewPerson()
 	person.FirstName = ""
 	err := db.CreatePerson(person)
 	if err == nil {
@@ -61,7 +29,7 @@ func TestCreatePersonWithoutFirstName(t *testing.T) {
 }
 
 func TestCreatePersonWithoutLastName(t *testing.T) {
-	person := getNewPerson()
+	person := GetNewPerson()
 	person.LastName = ""
 	err := db.CreatePerson(person)
 	if err == nil {
@@ -74,7 +42,7 @@ func TestCreatePersonWithoutLastName(t *testing.T) {
 }
 
 func TestCreatePersonWithShortPassword(t *testing.T) {
-	person := getNewPerson()
+	person := GetNewPerson()
 	person.Password = "foo"
 	err := db.CreatePerson(person)
 	if err == nil {
@@ -88,7 +56,7 @@ func TestCreatePersonWithShortPassword(t *testing.T) {
 
 func TestCreatePersonDuplicate(t *testing.T) {
 
-	person := createNewPerson()
+	person := CreateNewPerson()
 	err := db.CreatePerson(person)
 
 	if err == nil {
@@ -102,7 +70,7 @@ func TestCreatePersonDuplicate(t *testing.T) {
 
 func TestGetPerson(t *testing.T) {
 
-	originalPerson := getNewPerson()
+	originalPerson := GetNewPerson()
 	db.CreatePerson(originalPerson)
 
 	receivedPerson, err := db.GetPerson(originalPerson.ID)

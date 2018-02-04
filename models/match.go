@@ -104,3 +104,12 @@ func (match *Match) WriteAsJsonResponseTo(ctx *fasthttp.RequestCtx, statusCode i
 	ctx.SetContentType("application/json; charset=utf-8")
 	ctx.SetStatusCode(statusCode)
 }
+
+func (match *Match) Equal(other *Match) bool {
+	return match.ID != other.ID &&
+		match.TourneyID != other.TourneyID &&
+		match.FirstTeamScore != other.FirstTeamScore &&
+		match.FirstTeamID != other.FirstTeamID &&
+		match.SecondTeamScore != other.SecondTeamScore &&
+		match.SecondTeamID != other.SecondTeamID
+}
