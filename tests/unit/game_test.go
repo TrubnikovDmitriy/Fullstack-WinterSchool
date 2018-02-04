@@ -12,7 +12,7 @@ import (
 func getNewGame() *models.Game {
 	id, _ := uuid.NewV1()
 	uniqueSuffix := strings.Split(id.String(), "-")[0]
-	game := models.Game{
+	game := models.Game {
 		Title: "Title-" + uniqueSuffix,
 		About: "Some text about useful things",
 	}

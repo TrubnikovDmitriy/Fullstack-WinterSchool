@@ -12,7 +12,7 @@ import (
 func getNewTeam() *models.Team {
 	id, _ := uuid.NewV1()
 	uniqueSuffix := strings.Split(id.String(), "-")[0]
-	team := models.Team{
+	team := models.Team {
 		Name: "Name-" + uniqueSuffix,
 		About: "A few words about this amazing team",
 	}
@@ -91,7 +91,7 @@ func TestCreateTeamWithTooLongAbout(t *testing.T) {
 	}
 }
 
-func TestCreateTeamConflict(t *testing.T) {
+func TestCreateTeamDuplicate(t *testing.T) {
 	team := createNewTeam()
 	err := db.CreateTeam(team)
 	if err == nil {

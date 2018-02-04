@@ -4,8 +4,8 @@ import (
 	"../models"
 	"../services"
 	"github.com/valyala/fasthttp"
-	"strconv"
 	"github.com/satori/go.uuid"
+	"github.com/jackc/pgx/pgtype"
 )
 
 
@@ -32,14 +32,14 @@ func CreateTeam(team *models.Team) *serv.ErrorCode {
 	}
 
 	// Проверка на уникальность имени
-	var existingID int
+	var existingID pgtype.UUID
 	err := verifyUnique(
 		"SELECT id FROM teams WHERE team_name = $1", &existingID, team.Name)
 	if err != nil {
 		return &serv.ErrorCode{
 			Code: fasthttp.StatusConflict,
 			Message: "Team with the same name already exist",
-			Link: serv.Href + "/teams/" + strconv.Itoa(existingID),
+			Link: serv.Href + "/teams/" + castUUID(existingID).String(),
 		}
 	}
 
