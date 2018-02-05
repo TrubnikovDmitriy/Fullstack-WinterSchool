@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Example') {
             steps {
-                sh 'go run main.go'
+                sh 'go test ./tests/unit/ -v'
             }
         }
     }
