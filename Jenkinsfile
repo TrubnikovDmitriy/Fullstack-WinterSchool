@@ -3,12 +3,14 @@ pipeline {
     stages {
         stage('begin') {
             parallel {
-                steps {
-                    echo 'echo1'
-                    echo 'echo2'
-                    echo 'echo3'
-                }
-                stage('match_test2') {
+                stage('one-1') {
+                    steps {
+                        echo 'echo1'
+                        echo 'echo2'
+                        echo 'echo3'
+                    }
+                }    
+                stage('one-2') {
                     steps {
                         sh 'go test ./tests/unit/match_test.go -v'
                         echo 'success'
