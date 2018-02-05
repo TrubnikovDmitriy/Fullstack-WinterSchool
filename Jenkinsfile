@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Example') {
             steps {
-                echo 'Hello World'
+                bash 'go run main'
             }
         }
     }
