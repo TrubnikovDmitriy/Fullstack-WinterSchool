@@ -3,6 +3,7 @@ package unit
 import (
 	db "../../database"
 	. "../service"
+	"../../models"
 	"time"
 	"testing"
 	"github.com/valyala/fasthttp"
@@ -196,11 +197,26 @@ func TestGetTourneyGridSymmetric(t *testing.T) {
 		return
 	}
 
-	for _, match := range arrayMatches.Array {
+	var parentMatch *models.Match = nil
+	for i, match := range arrayMatches.Array {
 		if match.TourneyID != tourney.ID {
 			t.Errorf("Matche obtains to another tournament " +
-					"(wrong tourney ID = %s)", match.TourneyID)
+				"(wrong tourney ID = %s)", match.TourneyID)
 		}
+		if match.NextMatch == nil {
+			if parentMatch != nil {
+				t.Errorf("More than one final match " +
+					"(tourney ID = %s)", tourney.ID.String())
+				return
+			}
+			parentMatch = &arrayMatches.Array[i]
+		}
+	}
+
+	if parentMatch == nil {
+		t.Errorf("The final match is missing " +
+			"(tourney ID = %s)", tourney.ID.String())
+		return
 	}
 
 	if len(matches) != len(arrayMatches.Array) {
@@ -209,36 +225,24 @@ func TestGetTourneyGridSymmetric(t *testing.T) {
 	}
 
 	// Родительская нода
-	if tourney.MatchTree.ID != arrayMatches.Array[0].ID {
+	if tourney.MatchTree.ID != parentMatch.ID {
 		t.Errorf("Parent node ID is incorrect")
 	}
-	if tourney.MatchTree.LeftChild.ID != *arrayMatches.Array[0].PrevMatch1 {
+
+	if parentMatch.PrevMatch1 == nil {
+		t.Errorf("Left left node is incorrect")
+		return
+	}
+	if parentMatch.PrevMatch2 == nil {
+		t.Errorf("Left right node is incorrect")
+		return
+	}
+
+	if tourney.MatchTree.LeftChild.ID != *parentMatch.PrevMatch1 {
 		t.Errorf("Parent's left child ID is incorrect")
 	}
-	if tourney.MatchTree.RightChild.ID != *arrayMatches.Array[0].PrevMatch2 {
+	if tourney.MatchTree.RightChild.ID != *parentMatch.PrevMatch2 {
 		t.Errorf("Parent's right child ID is incorrect")
-	}
-
-	// Левый ребенок
-	if tourney.MatchTree.LeftChild.ID != arrayMatches.Array[1].ID {
-		t.Errorf("Left node ID is incorrect")
-	}
-	if arrayMatches.Array[1].PrevMatch1 != nil {
-		t.Errorf("Left left node is incorrect")
-	}
-	if arrayMatches.Array[1].PrevMatch2 != nil {
-		t.Errorf("Left right node is incorrect")
-	}
-
-	// Правый ребенок
-	if tourney.MatchTree.RightChild.ID != arrayMatches.Array[2].ID {
-		t.Errorf("Right node ID is incorrect")
-	}
-	if arrayMatches.Array[2].PrevMatch1 != nil {
-		t.Errorf("Left left node is incorrect")
-	}
-	if arrayMatches.Array[2].PrevMatch2 != nil {
-		t.Errorf("Left right node is incorrect")
 	}
 
 }
