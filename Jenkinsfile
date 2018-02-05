@@ -1,7 +1,7 @@
 pipeline {
     agent any
     stages {
-        stage('match_test') {
+        stage('begin') {
             steps {
                 echo 'echo'
             }
@@ -10,7 +10,7 @@ pipeline {
         stage('testing') {
             parallel {
                 
-                stage('match_test') {
+                stage('match_test2') {
                     steps {
                         sh 'go test ./tests/unit/match_test.go -v'
                     }
