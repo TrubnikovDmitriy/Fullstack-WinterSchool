@@ -1,9 +1,30 @@
 pipeline {
     agent any
     stages {
-        stage('Example') {
+        parallel stage('game_test') {
             steps {
-                sh 'go test ./tests/unit/ -v'
+                sh 'go test ./tests/unit/game_test.go -v'
+            }
+        }
+        
+        parallel stage('match_test') {
+            steps {
+                sh 'go test ./tests/unit/match_test.go -v'
+            }
+        }
+        parallel stage('person_test') {
+            steps {
+                sh 'go test ./tests/unit/person_test.go -v'
+            }
+        }
+        parallel stage('player_test') {
+            steps {
+                sh 'go test ./tests/unit/player_test.go -v'
+            }
+        }
+        parallel stage('team_test') {
+            steps {
+                sh 'go test ./tests/unit/team_test.go -v'
             }
         }
     }
