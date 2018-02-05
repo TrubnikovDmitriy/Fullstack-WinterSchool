@@ -160,6 +160,6 @@ func CreateNewMatches(deep int) (*Tournament, []MatchesTreeForm) {
 }
 
 
-func CreateNewPlayer() *Player {
-
-}
+//func CreateNewPlayer() *Player {
+//
+//}
