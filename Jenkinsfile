@@ -2,8 +2,18 @@ pipeline {
     agent any
     stages {
         stage('begin') {
-            steps {
-                echo 'echo'
+            parallel {
+                steps {
+                    echo 'echo1'
+                    echo 'echo2'
+                    echo 'echo3'
+                }
+                stage('match_test2') {
+                    steps {
+                        sh 'go test ./tests/unit/match_test.go -v'
+                        echo 'success'
+                    }
+                }
             }
         }
         
@@ -31,6 +41,13 @@ pipeline {
                 stage('person_test') {
                     steps {
                         sh 'go test ./tests/unit/person_test.go -v'
+                    }
+                }
+                
+                
+                stage('touney_test') {
+                    steps {
+                        sh 'go test ./tests/unit/tournament_test.go -v'
                     }
                 }
                 
