@@ -11,6 +11,8 @@ type Team struct {
 	ID    uuid.UUID	`json:"-"`
 	Name  string  	`json:"team_name"`
 	About string  	`json:"about"`
+	CoachID uuid.UUID `json:"coach_id"`
+
 	Links []Link 	`json:"href"`
 }
 
@@ -31,13 +33,13 @@ func (team *Team) GenerateLinks() {
 
 	team.Links = append(team.Links, Link {
 		Rel: "Страница команды",
-		Href: serv.Href + "/teams/" + team.ID.String(),
+		Href: serv.GetConfig().Href + "/teams/" + team.ID.String(),
 		Action: "GET",
 	})
 
 	team.Links = append(team.Links, Link {
 		Rel: "Состав команды",
-		Href: serv.Href + "/teams/" + team.ID.String() + "/players",
+		Href: serv.GetConfig().Href + "/teams/" + team.ID.String() + "/players",
 		Action: "GET",
 	})
 }

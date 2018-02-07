@@ -1,11 +1,14 @@
 package database
 
 import (
-	"../models"
-	"../services"
 	"github.com/satori/go.uuid"
 	"github.com/jackc/pgx/pgtype"
 	"github.com/valyala/fasthttp"
+	"../services"
+	"../models"
+	"github.com/jackc/pgx"
+	"log"
+	"crypto/md5"
 )
 
 func CreatePerson(person *models.Person) *serv.ErrorCode {
@@ -15,31 +18,48 @@ func CreatePerson(person *models.Person) *serv.ErrorCode {
 		return errorCode
 	}
 
+	const checkUniqueEmail = "CheckUniqueEmail"
+	authDB := sharedKeyForWriteByMail(person.Email)
+	authDB.Prepare(checkUniqueEmail, "SELECT person_id FROM auth WHERE email = $1")
+
 	var existingID pgtype.UUID
-	err := verifyUnique("SELECT id FROM persons WHERE mail = $1",
-		&existingID, person.Mail)
-	if err != nil {
-		return &serv.ErrorCode{
+	err := authDB.QueryRow(checkUniqueEmail, person.Email).Scan(&existingID)
+	if err == nil {
+		return &serv.ErrorCode {
 			Code: fasthttp.StatusConflict,
 			Message: "User with the same mail already exists",
-			Link: serv.Href + "/persons/" +
+			Link: serv.GetConfig().Href + "/persons/" +
 				uuid.FromBytesOrNil(existingID.Bytes[:]).String(),
 		}
 	}
+	if err != pgx.ErrNoRows {
+		log.Print(err)
+		return serv.NewServerError(err)
+	}
 
 	person.ID = getID()
-	master := sharedKeyForWriteByID(person.ID)
+	personDB := sharedKeyForWriteByID(person.ID)
+
 	const insertPerson = "InsertPerson"
-	master.Prepare(insertPerson,
-		"INSERT INTO persons(id, first_name, last_name, about, mail, passw) " +
-			"VALUES($1, $2, $3, $4, $5, $6);")
+	personDB.Prepare(insertPerson,
+		"INSERT INTO persons(id, first_name, last_name, about) VALUES($1, $2, $3, $4);")
+
+	const insertAuth = "InsertAuth"
+	authDB.Prepare(insertAuth,
+		"INSERT INTO auth(email, pass, person_id) VALUES($1, $2, $3);")
 
 
-	_, err = master.Exec(insertPerson,
-			person.ID, person.FirstName, person.LastName,
-			person.About, person.Mail, serv.PasswordHashing(person.Password))
+	_, err = personDB.Exec(insertPerson, person.ID, person.FirstName, person.LastName, person.About)
+	if err != nil {
+		log.Print(err)
+		return serv.NewServerError(err)
+	}
+
+	_, err = authDB.Exec(insertAuth, person.Email, serv.PasswordHashing(person.Password), person.ID)
 	person.Password = ""
 	if err != nil {
+		log.Print(err)
+		personDB.Exec("DELETE FROM persons WHERE id=$1", person.ID)
 		return serv.NewServerError(err)
 	}
 
@@ -51,14 +71,26 @@ func GetPerson(id uuid.UUID) (*models.Person, *serv.ErrorCode) {
 	const selectPersonByID = "SelectPersonByID"
 	db := sharedKeyForReadByID(id)
 	db.Prepare(selectPersonByID,
-		"SELECT first_name, last_name, mail, about FROM persons WHERE id = $1")
+		"SELECT first_name, last_name, about FROM persons WHERE id = $1")
 
 	person := models.Person{ID: id}
 	err := db.QueryRow(selectPersonByID, id).
-		Scan(&person.FirstName, &person.LastName, &person.Mail, &person.About)
+		Scan(&person.FirstName, &person.LastName, &person.About)
 	if err != nil {
 		return nil, checkError(err)
 	}
 
 	return &person, nil
+}
+
+
+func sharedKeyForWriteByMail(email string) *pgx.ConnPool {
+	shardKey := md5.New().Sum([]byte(email))[0]
+	return masterConnectionPool[int(shardKey) % serv.GetConfig().NumberOfShards]
+}
+
+func sharedKeyForReadByMail(email string) *pgx.ConnPool {
+	shardKey := md5.New().Sum([]byte(email))[0]
+	dbID := int(shardKey) % serv.GetConfig().NumberOfShards
+	return choiceMasterSlave(masterConnectionPool[dbID], slaveConnectionPool[dbID])
 }

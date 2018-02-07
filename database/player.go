@@ -87,7 +87,7 @@ func CreatePlayer(player *models.Player) *serv.ErrorCode {
 			return &serv.ErrorCode{
 				Code: fasthttp.StatusForbidden,
 				Message: "You're not invited to the given team, check out the invite list",
-				Link: serv.Href + "/persons/" + player.PersonID.String() + "/invite-list",
+				Link: serv.GetConfig().Href + "/persons/" + player.PersonID.String() + "/invite-list",
 			}
 		}
 		log.Print(err)

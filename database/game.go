@@ -38,7 +38,7 @@ func CreateGame(game *models.Game) *serv.ErrorCode {
 		return &serv.ErrorCode{
 			Code: fasthttp.StatusConflict,
 			Message: "Game with the same title already exists",
-			Link: serv.Href + "/games/" + existingID.String(),
+			Link: serv.GetConfig().Href + "/games/" + existingID.String(),
 		}
 	}
 

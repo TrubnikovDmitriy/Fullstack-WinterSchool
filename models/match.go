@@ -36,22 +36,24 @@ func (match *Match) Validate() *serv.ErrorCode {
 
 func (match *Match) GenerateLinks() {
 
+	href := serv.GetConfig().Href
+
 	match.Links = append(match.Links, Link {
 		Rel: "Турнирная сетка",
-		Href: serv.Href + "/tourney/" + match.TourneyID.String() + "/matches",
+		Href: href + "/tourney/" + match.TourneyID.String() + "/matches",
 		Action: "GET",
 	})
 
 	match.Links = append(match.Links, Link {
 		Rel: "Ключевые события матча",
-		Href: serv.Href + "/tourney/" + match.TourneyID.String() +
+		Href: href + "/tourney/" + match.TourneyID.String() +
 				"/matches/" + match.ID.String() + "/timeline",
 		Action: "GET",
 	})
 
 	match.Links = append(match.Links, Link {
 		Rel: "Оставить комментарий",
-		Href: serv.Href + "/tourney/" + match.TourneyID.String() +
+		Href: href + "/tourney/" + match.TourneyID.String() +
 				"/matches/" + match.ID.String() + "/timeline",
 		Action: "POST",
 	})
@@ -59,14 +61,14 @@ func (match *Match) GenerateLinks() {
 	if match.FirstTeamID != nil {
 		match.Links = append(match.Links, Link{
 			Rel:    "Ссылка на команду №1",
-			Href:   serv.Href + "/teams/" + match.FirstTeamID.String(),
+			Href:   href + "/teams/" + match.FirstTeamID.String(),
 			Action: "GET",
 		})
 	}
 	if match.SecondTeamID != nil {
 		match.Links = append(match.Links, Link{
 			Rel:    "Ссылка на команду №2",
-			Href:   serv.Href + "/teams/" + match.SecondTeamID.String(),
+			Href:  	href + "/teams/" + match.SecondTeamID.String(),
 			Action: "GET",
 		})
 	}
@@ -74,7 +76,7 @@ func (match *Match) GenerateLinks() {
 	if match.PrevMatch1 != nil {
 		match.Links = append(match.Links, Link{
 			Rel:    "Ссылка на предыдущий матч №1",
-			Href:   serv.Href + "/tourney/" + match.TourneyID.String() +
+			Href:   href + "/tourney/" + match.TourneyID.String() +
 					"/matches/" + match.PrevMatch1.String(),
 			Action: "GET",
 		})
@@ -82,7 +84,7 @@ func (match *Match) GenerateLinks() {
 	if match.PrevMatch2 != nil {
 		match.Links = append(match.Links, Link{
 			Rel:    "Ссылка на предыдущий матч  №2",
-			Href:   serv.Href + "/tourney/" + match.TourneyID.String() +
+			Href:   href + "/tourney/" + match.TourneyID.String() +
 					"/matches/" + match.PrevMatch1.String(),
 			Action: "GET",
 		})
@@ -90,7 +92,7 @@ func (match *Match) GenerateLinks() {
 	if match.NextMatch != nil {
 		match.Links = append(match.Links, Link{
 			Rel:    "Ссылка на следующий матч",
-			Href:   serv.Href + "/tourney/" + match.TourneyID.String() +
+			Href:   href + "/tourney/" + match.TourneyID.String() +
 					"/matches/" + match.NextMatch.String(),
 			Action: "GET",
 		})

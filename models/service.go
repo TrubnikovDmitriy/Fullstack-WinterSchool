@@ -30,7 +30,7 @@ func fieldLengthValidate(field string, fieldName string) *serv.ErrorCode {
 	if len(field) == 0 {
 		return serv.NewBadRequest("The " + fieldName + " is missing")
 	}
-	if len(field) > serv.MaxFieldLength {
+	if len(field) > serv.GetConfig().MaxFieldLength {
 		return serv.NewBadRequest("The " + fieldName + " is too long")
 	}
 	return nil

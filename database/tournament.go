@@ -42,7 +42,7 @@ func CreateTournament(tourney *models.Tournament) *serv.ErrorCode {
 		return &serv.ErrorCode{
 			Code: fasthttp.StatusConflict,
 			Message: "Tournament with the same title already exist",
-			Link: serv.Href + "/tourney/" + existingID.String(),
+			Link: serv.GetConfig().Href + "/tourney/" + existingID.String(),
 		}
 	}
 

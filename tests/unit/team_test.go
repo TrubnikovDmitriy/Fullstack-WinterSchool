@@ -2,7 +2,7 @@ package unit
 
 import (
 	db "../../database"
-	. "../service"
+	. "../../tests"
 	"../../models"
 	"testing"
 	"github.com/satori/go.uuid"
@@ -24,8 +24,7 @@ func TestCreateTeamWithoutName(t *testing.T) {
 	team.Name = ""
 	err := db.CreateTeam(team)
 	if err == nil {
-		t.Error("Team without team name has been created")
-		return
+		t.Fatalf("Team without team name has been created")
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpectable error for creating team with incorrect fields:\n%s", err)
@@ -37,8 +36,7 @@ func TestCreateTeamWithTooLongName(t *testing.T) {
 	team.Name = "This team name is " + strings.Repeat("very, ", 10) + "very long"
 	err := db.CreateTeam(team)
 	if err == nil {
-		t.Errorf("Team with too long team name has been created\nTeam name: '%s'", team.Name)
-		return
+		t.Fatalf("Team with too long team name has been created\nTeam name: '%s'", team.Name)
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpectable error for creating team with incorrect fields:\n%s", err)
@@ -50,8 +48,7 @@ func TestCreateTeamWithoutAbout(t *testing.T) {
 	team.About = ""
 	err := db.CreateTeam(team)
 	if err == nil {
-		t.Error("Team without about-field has been created")
-		return
+		t.Fatalf("Team without about-field has been created")
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpectable error for creating team with incorrect fields:\n%s", err)
@@ -63,8 +60,7 @@ func TestCreateTeamWithTooLongAbout(t *testing.T) {
 	team.Name = "This about is " + strings.Repeat("very, ", 10) + "very long"
 	err := db.CreateTeam(team)
 	if err == nil {
-		t.Errorf("Team with too about text has been created\nteam name: '%s'", team.Name)
-		return
+		t.Fatalf("Team with too about text has been created\nteam name: '%s'", team.Name)
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpectable error for creating team with incorrect fields:\n%s", err)
@@ -75,8 +71,7 @@ func TestCreateTeamDuplicate(t *testing.T) {
 	team := CreateNewTeam()
 	err := db.CreateTeam(team)
 	if err == nil {
-		t.Errorf("Created two identical teams (UUID: %s)", team.ID.String())
-		return
+		t.Fatalf("Created two identical teams (UUID: %s)", team.ID.String())
 	}
 	if err.Code != fasthttp.StatusConflict {
 		t.Errorf("Unexpectable error for creating the same teams:\n%s", err)
@@ -109,12 +104,11 @@ func TestGetTheAbsentTeam(t *testing.T) {
 	team, err := db.GetTeamByID(id)
 	if err == nil {
 		if team != nil {
-			t.Errorf("Got a non-existing team\n" +
+			t.Fatalf("Got a non-existing team\n" +
 				"requestID:\t%s\nresponseID:\t%s\n", id.String(), team.ID.String())
 		} else {
-			t.Errorf("Got a non-existing team\nrequestID:\t%s\n", id.String())
+			t.Fatalf("Got a non-existing team\nrequestID:\t%s\n", id.String())
 		}
-		return
 	}
 	if err.Code != fasthttp.StatusNotFound {
 		t.Errorf("Unexpectable error for getting non-existing team:\n%s", err)

@@ -20,7 +20,7 @@ type MatchesTreeForm struct {
 }
 
 func (match *MatchesTreeForm) Validate() *serv.ErrorCode {
-	ttl := serv.MaxMatchesInTournament
+	ttl := serv.GetConfig().MaxMatchesInTourney
 	return match.recursiveValidate(match.StartTime, &ttl)
 }
 
@@ -29,7 +29,7 @@ func (match *MatchesTreeForm) recursiveValidate(parentTime time.Time, ttl *int) 
 	if *ttl == 0 {
 		return serv.NewBadRequest("Too many matches")
 	}
-	if *ttl != serv.MaxMatchesInTournament {
+	if *ttl != serv.GetConfig().MaxMatchesInTourney {
 		if match.StartTime.After(parentTime) || match.StartTime.Equal(parentTime) {
 			return serv.NewBadRequest("Next matches begin before previous")
 		}

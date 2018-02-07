@@ -10,14 +10,14 @@ import (
 type Person struct {
 	ID uuid.UUID `json:"-"`
 
-	FirstName string  `json:"first_name"`
-	LastName  string  `json:"last_name"`
-	About     string  `json:"about"`
-	Mail  	  string  `json:"mail"`
-	Password  string  `json:"password,omitempty"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	About     string `json:"about"`
+	Email     string `json:"email"`
+	Password  string `json:"password,omitempty"`
 
-	IsStaff   string  `json:"staff,omitempty"`
-	Links     []Link  `json:"href"`
+	Staff bool   `json:"-"`
+	Links []Link `json:"href"`
 }
 
 func (person *Person) Validate() *serv.ErrorCode {
@@ -30,12 +30,12 @@ func (person *Person) Validate() *serv.ErrorCode {
 	if err != nil {
 		return err
 	}
-	err = fieldLengthValidate(person.Mail, "mail")
+	err = fieldLengthValidate(person.Email, "mail")
 	if err != nil {
 		return err
 	}
 
-	if len(person.Password) < serv.MinPasswordLength {
+	if len(person.Password) < serv.GetConfig().MinPasswordLength {
 		return serv.NewBadRequest("Password is too short")
 	}
 
@@ -46,7 +46,7 @@ func (person *Person) GenerateLinks() {
 
 	person.Links = append(person.Links, Link {
 		Rel: "Профиль",
-		Href: serv.Href + "/persons/" + person.ID.String(),
+		Href: serv.GetConfig().Href + "/persons/" + person.ID.String(),
 		Action: "GET",
 	})
 }

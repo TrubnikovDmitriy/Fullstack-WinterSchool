@@ -1,8 +1,8 @@
-package service
+package tests
 
 import (
-	db "../../database"
-	. "../../models"
+	db "../database"
+	. "../models"
 	"github.com/satori/go.uuid"
 	"math"
 	"time"
@@ -98,18 +98,13 @@ func CreateNewTeam() *Team {
 
 func GetNewPerson() *Person {
 
-	var FirstNameTemplate string = "{Vasya|Peter|Nikita|Sasha|Dmitriy|Enakentiy|John|Masha|Natasha|Tony}"
-	var LastNameTemplate string = "{Silaev|Kuzmin|Krasnov|Sitnikov|Smirnov|Gorbenko|Trubnikov|Smirnova}"
-	var MailsTemplate string = "{@mail.ru|@yandex.ru|@gmail.com|@rambler.com}"
-
-	tg := text_generator.New()
 	id, _ := uuid.NewV4()
 	postfixes := strings.Split(id.String(), "-")
 
 	person := Person {
-		FirstName: tg.Generate(FirstNameTemplate),
-		LastName:  tg.Generate(LastNameTemplate),
-		Mail:      tg.Generate(LastNameTemplate) + "_" + postfixes[1] + tg.Generate(MailsTemplate),
+		FirstName: GenerateFirstName(),
+		LastName:  GenerateLastName(),
+		Email:     GenerateEmail(),
 		Password:  postfixes[0],
 	}
 
@@ -122,6 +117,7 @@ func CreateNewPerson() *Person {
 	forDatabase := *original
 	db.CreatePerson(&forDatabase)
 
+	original.ID = forDatabase.ID
 	return original
 }
 
@@ -147,7 +143,6 @@ func CreateNewGame() *Game {
 	return gameOriginal
 }
 
-
 func CreateNewMatches(deep int) (*Tournament, []MatchesTreeForm) {
 
 	tourney := GetNewTournament()
@@ -159,7 +154,47 @@ func CreateNewMatches(deep int) (*Tournament, []MatchesTreeForm) {
 	return tourney, matches
 }
 
+func GetNewOAuth(person *Person, scope int) *OAuth {
+	id, _ := uuid.NewV4()
+	return &OAuth{
+		Email: person.Email,
+		Password: person.Password,
+		AppID: id,
+		Scope: scope,
+	}
+}
 
-//func CreateNewPlayer() *Player {
-//
-//}
+func CreateNewOAuth(scope int) *OAuth {
+	person := CreateNewPerson()
+	id, _ := uuid.NewV4()
+	oauth := &OAuth{
+		Email: person.Email,
+		Password: person.Password,
+		AppID: id,
+		Scope: scope,
+	}
+
+	db.Auth(oauth)
+
+	return oauth
+}
+
+
+
+func GenerateEmail() string {
+	id, _ := uuid.NewV4()
+	postfixes := strings.Split(id.String(), "-")
+	return tg.Generate(LastNameTemplate) + "_" + postfixes[1] + tg.Generate(MailsTemplate)
+}
+func GenerateFirstName() string {
+	return tg.Generate(FirstNameTemplate)
+}
+func GenerateLastName() string {
+	return tg.Generate(LastNameTemplate)
+}
+
+var tg = text_generator.New()
+const FirstNameTemplate string = "{Vasya|Peter|Nikita|Sasha|Dmitriy|Enakentiy|John|Masha|Natasha|Tony}"
+const LastNameTemplate string = "{Silaev|Kuzmin|Krasnov|Sitnikov|Smirnov|Gorbenko|Trubnikov|Smirnova}"
+const MailsTemplate string = "{@mail.ru|@yandex.ru|@gmail.com|@rambler.com}"
+

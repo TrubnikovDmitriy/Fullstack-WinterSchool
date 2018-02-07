@@ -21,7 +21,7 @@ func initRedisConnectionPool() *redis.Pool {
 			c, err := redis.Dial(
 				"tcp",
 				"localhost:6379",
-				redis.DialDatabase(1),
+				redis.DialDatabase(0),
 			)
 			if err != nil {
 				log.Fatal(err)
@@ -30,24 +30,6 @@ func initRedisConnectionPool() *redis.Pool {
 			return c, nil
 		},
 	}
-
-	//conn := redisConnPool.Get()
-	//defer conn.Close()
-	//
-	//str, err := redis.String(conn.Do("PING"))
-	//if err != nil {
-	//	fmt.Print("Bad")
-	//}
-	//fmt.Printf("Good: %s\n", str)
-	//str, err = redis.String(conn.Do("SET", "test", "world"))
-	//if err != nil {
-	//	fmt.Print(err)
-	//} else {
-	//	fmt.Print(str)
-	//}
-	//conn.Do("APPEND", "test", "Hello")
-	//str, err = redis.String(conn.Do("GET", "test"))
-	//fmt.Printf("\nGood: %s", str)
 
 	return redisConnPool
 }

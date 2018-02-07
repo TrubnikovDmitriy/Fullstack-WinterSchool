@@ -39,7 +39,7 @@ func CreateTeam(team *models.Team) *serv.ErrorCode {
 		return &serv.ErrorCode{
 			Code: fasthttp.StatusConflict,
 			Message: "Team with the same name already exist",
-			Link: serv.Href + "/teams/" + castUUID(existingID).String(),
+			Link: serv.GetConfig().Href + "/teams/" + castUUID(existingID).String(),
 		}
 	}
 

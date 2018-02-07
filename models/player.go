@@ -33,20 +33,22 @@ func (player *Player)  Validate() *serv.ErrorCode {
 
 func (player *Player) GenerateLinks() {
 
+	href := serv.GetConfig().Href
+
 	player.Links = append(player.Links, Link {
 		Rel: "Команда",
-		Href: serv.Href + "/teams/" + player.TeamID.String(),
+		Href: href + "/teams/" + player.TeamID.String(),
 		Action: "GET",
 	})
 
 	player.Links = append(player.Links, Link {
 		Rel: "Состав команды",
-		Href: serv.Href + "/teams/" + player.TeamID.String() + "/players",
+		Href: href + "/teams/" + player.TeamID.String() + "/players",
 		Action: "GET",
 	})
 	player.Links = append(player.Links, Link {
 		Rel: "Страница игрока",
-		Href: serv.Href + "/teams/" + player.TeamID.String() +
+		Href: href + "/teams/" + player.TeamID.String() +
 			"/players/" + player.ID.String(),
 		Action: "GET",
 	})

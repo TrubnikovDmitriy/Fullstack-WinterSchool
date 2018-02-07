@@ -2,7 +2,7 @@ package unit
 
 import (
 	db "../../database"
-	. "../service"
+	. "../../tests"
 	"testing"
 )
 

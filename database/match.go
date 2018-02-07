@@ -1,11 +1,11 @@
 package database
 
 import (
-	"../models"
-	"../services"
 	"github.com/satori/go.uuid"
 	"context"
 	"github.com/jackc/pgx/pgtype"
+	"../services"
+	"../models"
 )
 
 func GetMatchByID(tourneyID uuid.UUID, matchID uuid.UUID) (*models.Match, *serv.ErrorCode) {

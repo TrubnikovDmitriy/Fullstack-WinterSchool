@@ -7,17 +7,11 @@ import (
 	"github.com/valyala/fasthttp"
 	"math/rand"
 	"github.com/satori/go.uuid"
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/jackc/pgx/pgtype"
 )
 
 var (
-	master1 *pgx.ConnPool
-	master2 *pgx.ConnPool
-	slave1 *pgx.ConnPool
-	slave2 *pgx.ConnPool
-
 	masterConnectionPool []*pgx.ConnPool
 	slaveConnectionPool []*pgx.ConnPool
 )
@@ -26,93 +20,37 @@ var ErrNotUnique = errors.New("Inserting statement violates the consistency")
 
 func init() {
 
-	//// Prod
-	//master1 = initPostgresConnectionPool(pgx.ConnConfig{
-	//	Host: "192.168.1.26",
-	//	Database: "master",
-	//	User: "student11",
-	//	Password: "pass",
-	//})
-	//slave1 = initPostgresConnectionPool(pgx.ConnConfig{
-	//	Host: "192.168.1.26",
-	//	Database: "slave",
-	//	User: "student11",
-	//	Password: "pass",
-	//})
-	//master2 = initPostgresConnectionPool(pgx.ConnConfig{
-	//		Host: "192.168.1.149",
-	//		Database: "master",
-	//		User: "student11",
-	//		Password: "pass",
-	//})
-	//slave2 = initPostgresConnectionPool(pgx.ConnConfig{
-	//		Host: "192.168.1.149",
-	//		Database: "slave",
-	//		User: "student11",
-	//		Password: "pass",
-	//})
-
-	//// SSH
-	//master1 = initPostgresConnectionPool(pgx.ConnConfig{
-	//	Host: "localhost",
-	//	Port: 5434,
-	//	Database: "master",
-	//	User: "student11",
-	//	Password: "pass",
-	//})
-	//slave1 = initPostgresConnectionPool(pgx.ConnConfig{
-	//	Host: "localhost",
-	//	Port: 5434,
-	//	Database: "slave",
-	//	User: "student11",
-	//	Password: "pass",
-	//})
-	//master2 = initPostgresConnectionPool(pgx.ConnConfig{
-	//	Host: "localhost",
-	//	Port: 5433,
-	//	Database: "master",
-	//	User: "student11",
-	//	Password: "pass",
-	//})
-	//slave2 = initPostgresConnectionPool(pgx.ConnConfig{
-	//	Host: "localhost",
-	//	Port: 5433,
-	//	Database: "slave",
-	//	User: "student11",
-	//	Password: "pass",
-	//})
-
-	//// Local
-	pgxConfig := pgx.ConnConfig{
-		Host: "localhost",
-		Database: "winterschool",
-		User: "trubnikov",
-		Password: "pass",
+	shards := serv.GetConfig().Shards
+	for i := range shards {
+		masterConnectionPool = append(masterConnectionPool, initPgConnPool(shards[i].Master))
+		slaveConnectionPool = append(slaveConnectionPool, initPgConnPool(shards[i].Slave))
 	}
-	master1 = initPostgresConnectionPool(pgxConfig)
-	slave1 = initPostgresConnectionPool(pgxConfig)
-	master2 = initPostgresConnectionPool(pgxConfig)
-	slave2 = initPostgresConnectionPool(pgxConfig)
 
-	masterConnectionPool = append(masterConnectionPool, master1)
-	masterConnectionPool = append(masterConnectionPool, master2)
-
-	slaveConnectionPool = append(slaveConnectionPool, slave1)
-	slaveConnectionPool = append(slaveConnectionPool, slave2)
 }
 
-func initPostgresConnectionPool(config pgx.ConnConfig) *pgx.ConnPool {
+
+func initPgConnPool(config serv.DataBase) *pgx.ConnPool {
+
+	connectionConfig := pgx.ConnConfig{
+		Host:     config.Host,
+		Database: config.DBName,
+		User:     config.User,
+		Password: config.Pass,
+		Port:     config.Port,
+	}
 
 	pgConnPool, err := pgx.NewConnPool(pgx.ConnPoolConfig {
-		ConnConfig: config,
-		MaxConnections: serv.MaxConnections,
+		ConnConfig: connectionConfig,
+		MaxConnections: serv.GetConfig().MaxConnectionsToDB,
 	})
 
 	if err != nil {
 		log.Fatal(err)
 	}
 	return pgConnPool
+
 }
+
 
 
 func checkError(err error) *serv.ErrorCode {
@@ -130,16 +68,16 @@ func checkError(err error) *serv.ErrorCode {
 }
 
 func sharedKeyForWriteByID(uuid uuid.UUID) *pgx.ConnPool {
-	return masterConnectionPool[uuid[0] % serv.NumberOfShards]
+	return masterConnectionPool[int(uuid[0]) % serv.GetConfig().NumberOfShards]
 }
 
 func sharedKeyForReadByID(uuid uuid.UUID) *pgx.ConnPool {
-	dbID := uuid[0] % serv.NumberOfShards
+	dbID := int(uuid[0]) % serv.GetConfig().NumberOfShards
 	return choiceMasterSlave(masterConnectionPool[dbID], slaveConnectionPool[dbID])
 }
 
 func choiceMasterSlave(masterN *pgx.ConnPool, slaveN *pgx.ConnPool) *pgx.ConnPool {
-	if rand.Int31n(serv.SlaveToMasterReadRate) == 0 {
+	if rand.Int31n(serv.GetConfig().SlaveToMasterReadRatio + 1) == 0 {
 		return masterN
 	} else {
 		return slaveN
@@ -149,7 +87,7 @@ func choiceMasterSlave(masterN *pgx.ConnPool, slaveN *pgx.ConnPool) *pgx.ConnPoo
 func getID() uuid.UUID {
 	id, err := uuid.NewV4()
 	if err != nil {
-		fmt.Print(err)
+		log.Print(err)
 	}
 	return id
 }
@@ -162,7 +100,7 @@ func verifyUnique(sql string, ptrDest interface{}, args string) error {
 			if err == nil {
 				return ErrNotUnique
 			} else {
-				fmt.Print(err)
+				log.Print(err)
 				return err
 			}
 		}

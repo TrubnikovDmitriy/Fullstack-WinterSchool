@@ -1,7 +1,7 @@
 package unit
 
 import (
-	. "../service"
+	. "../../tests"
 	"../../models"
 	"../../services"
 	"testing"
@@ -48,7 +48,7 @@ func TestOneSingleMatch(t *testing.T) {
 }
 
 func TestTheMaximumDepthRecursion(t *testing.T) {
-	maxDeep := int(math.Log2(float64(serv.MaxMatchesInTournament + 1)))
+	maxDeep := int(math.Log2(float64(serv.GetConfig().MaxMatchesInTourney + 1)))
 	deepTree := CreateBinaryTree(maxDeep)
 	if deepTree.Validate() != nil {
 		t.Errorf("Tree with depth %d is not a valid", maxDeep)
@@ -56,13 +56,13 @@ func TestTheMaximumDepthRecursion(t *testing.T) {
 }
 
 func TestTooDeepRecursion(t *testing.T) {
-	maxDeep := int(math.Log2(float64(serv.MaxMatchesInTournament + 1)))
+	maxDeep := int(math.Log2(float64(serv.GetConfig().MaxMatchesInTourney + 1)))
 	deepTree := CreateBinaryTree(maxDeep + 1)
 	if deepTree.Validate() == nil {
 		t.Errorf(
 			"Tree with depth %d is valid " +
 				"(it's more than max allowable number of nodes = %d)",
-			maxDeep, serv.MaxMatchesInTournament,
+			maxDeep, serv.GetConfig().MaxMatchesInTourney,
 		)
 	}
 }

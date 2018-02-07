@@ -35,11 +35,12 @@ func init() {
 	router.POST("/v1/tourney", handlers.CreateTournament)
 
 	// games
-	router.GET("/v1/games/:id", handlers.GetGame)
-	router.POST("/v1/games", handlers.CreateGame)
+	//router.GET("/v1/:game_title", handlers.GetGame)
+	//router.POST("/v1/:game_title", handlers.CreateGame)
 
 	// TODO delete test
 	router.GET("/test", database.Test)
+	router.GET("/test2", database.Test2)
 }
 
 func main() {

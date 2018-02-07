@@ -11,6 +11,10 @@ type Game struct {
 	ID uuid.UUID `json:"id"`
 	Title string `json:"title"`
 	About string `json:"about"`
+
+	GameTitle string `json:"game_title"`
+	OrganizeID uuid.UUID `json:"organize_id"`
+
 	Links []Link `json:"href,omitempty"`
 }
 
@@ -30,7 +34,7 @@ func (game *Game) Validate() *serv.ErrorCode {
 func (game *Game) GenerateLinks() {
 		game.Links = append(game.Links, Link {
 		Rel: "game",
-		Href: serv.Href + "/games/" + game.ID.String(),
+		Href: serv.GetConfig().Href + "/games/" + game.ID.String(),
 		Action: "GET",
 	})
 }

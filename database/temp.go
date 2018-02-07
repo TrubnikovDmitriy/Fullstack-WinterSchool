@@ -5,14 +5,38 @@ import (
 	"fmt"
 	"github.com/satori/go.uuid"
 	"context"
+	"time"
 )
+
+
+func Test2(ctx *fasthttp.RequestCtx) {
+
+	code := ctx.QueryArgs().Peek("codes")
+	fmt.Print(len(code))
+	fmt.Printf(string(code) + "\n\n")
+
+	//fasthttp.Post("")
+	cookie := &fasthttp.Cookie{}
+	cookie.SetKey("ws_auth")
+	cookie.SetValue(string(code))
+	cookie.SetExpire(time.Now().AddDate(1, 0, 0))
+
+	ctx.Response.Header.SetCookie(cookie)
+
+	ctx.SetStatusCode(201)
+	return
+}
 
 func Test(ctx *fasthttp.RequestCtx) {
 
+
+	ctx.Redirect("http://localhost:5000/test2?code=42", 302)
+	return
+
 	//fmt.Printf("int[0]=%d\n\n", id.Bytes()[0])
-	master1.Prepare("insert", "INSERT INTO games(id, title, about, uuid) " +
+	masterConnectionPool[0].Prepare("insert", "INSERT INTO games(id, title, about, uuid) " +
 		"VALUES ($1, 'hello', 'world', $2);")
-	batch := master1.BeginBatch()
+	batch := masterConnectionPool[0].BeginBatch()
 
 
 	for i := 0; i < 10; i++ {

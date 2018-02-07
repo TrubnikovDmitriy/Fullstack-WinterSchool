@@ -48,22 +48,23 @@ func (tourney *Tournament) Validate() *serv.ErrorCode {
 }
 
 func (tourney *Tournament) GenerateLinks() {
+	href := serv.GetConfig().Href
 
 	tourney.Links = append(tourney.Links, Link {
 		Rel: "Ссылка на турнир",
-		Href: serv.Href + "/tourney/" + tourney.ID.String(),
+		Href: href + "/tourney/" + tourney.ID.String(),
 		Action: "GET",
 	})
 
 	tourney.Links = append(tourney.Links, Link {
 		Rel: "Турнирная сетка",
-		Href: serv.Href + "/tourney/" + tourney.ID.String() + "/matches",
+		Href: href + "/tourney/" + tourney.ID.String() + "/matches",
 		Action: "GET",
 	})
 
 	tourney.Links = append(tourney.Links, Link {
 		Rel: "Команды участницы",
-		Href: serv.Href + "/tourney/" + tourney.ID.String() + "/teams",
+		Href: href + "/tourney/" + tourney.ID.String() + "/teams",
 		Action: "GET",
 	})
 }

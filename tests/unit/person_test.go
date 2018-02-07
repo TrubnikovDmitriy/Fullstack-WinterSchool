@@ -2,7 +2,7 @@ package unit
 
 import (
 	db "../../database"
-	. "../service"
+	. "../../tests"
 	"testing"
 	"github.com/valyala/fasthttp"
 )
@@ -20,8 +20,7 @@ func TestCreatePersonWithoutFirstName(t *testing.T) {
 	person.FirstName = ""
 	err := db.CreatePerson(person)
 	if err == nil {
-		t.Error("Created person with empty firstname")
-		return
+		t.Fatalf("Created person with empty firstname")
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpected error:\n%s", err)
@@ -33,8 +32,7 @@ func TestCreatePersonWithoutLastName(t *testing.T) {
 	person.LastName = ""
 	err := db.CreatePerson(person)
 	if err == nil {
-		t.Error("Created person with empty lastname")
-		return
+		t.Fatalf("Created person with empty lastname")
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpected error:\n%s", err)
@@ -46,8 +44,7 @@ func TestCreatePersonWithShortPassword(t *testing.T) {
 	person.Password = "foo"
 	err := db.CreatePerson(person)
 	if err == nil {
-		t.Errorf("Created person with too short password (ID: %s)\n", person.ID.String())
-		return
+		t.Fatalf("Created person with too short password (ID: %s)\n", person.ID.String())
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpected error\n%s", err)
@@ -60,8 +57,7 @@ func TestCreatePersonDuplicate(t *testing.T) {
 	err := db.CreatePerson(person)
 
 	if err == nil {
-		t.Errorf("Created the two same persons (ID: %s)\n", person.ID.String())
-		return
+		t.Fatalf("Created the two same persons (ID: %s)\n", person.ID.String())
 	}
 	if err.Code != fasthttp.StatusConflict {
 		t.Errorf("Unexpected error for duplicate:\n%s", err)
@@ -76,8 +72,7 @@ func TestGetPerson(t *testing.T) {
 	receivedPerson, err := db.GetPerson(originalPerson.ID)
 
 	if err != nil {
-		t.Errorf("Can't get created person\n%s", err)
-		return
+		t.Fatalf("Can't get created person\n%s", err)
 	}
 
 	if receivedPerson.FirstName != originalPerson.FirstName {
@@ -87,12 +82,7 @@ func TestGetPerson(t *testing.T) {
 	}
 	if receivedPerson.LastName != originalPerson.LastName {
 		t.Errorf("Received person has another last name\n" +
-			"Recieved person ID:\t%s,\nOriginal person ID:\t%s\n",
-			receivedPerson.ID.String(), originalPerson.ID.String())
-	}
-	if receivedPerson.Mail != originalPerson.Mail {
-		t.Errorf("Received person has another mail name\n" +
-			"Recieved person ID:\t%s,\nOriginal person ID:\t%s\n",
-			receivedPerson.ID.String(), originalPerson.ID.String())
+			"Recieved person name:\t%s,\nOriginal person name:\t%s\n",
+			receivedPerson.LastName, originalPerson.LastName)
 	}
 }

@@ -2,7 +2,7 @@ package unit
 
 import (
 	db "../../database"
-	. "../service"
+	. "../../tests"
 	"../../models"
 	"time"
 	"testing"
@@ -28,8 +28,7 @@ func TestCreateTourneyEmptyMatch(t *testing.T) {
 
 	err := db.CreateTournament(tourney)
 	if err == nil {
-		t.Errorf("Created tournament without matches (ID: %s)", tourney.ID)
-		return
+		t.Fatalf("Created tournament without matches (ID: %s)", tourney.ID)
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpectable error code for bad request\n%s\n", err)
@@ -44,8 +43,7 @@ func TestCreateTourneyWithoutTitle(t *testing.T) {
 
 	err := db.CreateTournament(tourney)
 	if err == nil {
-		t.Errorf("Created tournament without title (ID: %s)", tourney.ID)
-		return
+		t.Fatalf("Created tournament without title (ID: %s)", tourney.ID)
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpectable error code for bad request\n%s\n", err)
@@ -60,8 +58,7 @@ func TestCreateTourneyWithoutAbout(t *testing.T) {
 
 	err := db.CreateTournament(tourney)
 	if err == nil {
-		t.Errorf("Created tournament without about-field (ID: %s)", tourney.ID)
-		return
+		t.Fatalf("Created tournament without about-field (ID: %s)", tourney.ID)
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpectable error code for bad request\n%s\n", err)
@@ -76,8 +73,7 @@ func TestCreateTourneyWithIncorrectData(t *testing.T) {
 
 	err := db.CreateTournament(tourney)
 	if err == nil {
-		t.Errorf("Created tournament where 'end' before 'start' (ID: %s)", tourney.ID)
-		return
+		t.Fatalf("Created tournament where 'end' before 'start' (ID: %s)", tourney.ID)
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpectable error code for bad request\n%s\n", err)
@@ -92,8 +88,7 @@ func TestCreateTourneyWithEmptyData(t *testing.T) {
 
 	err := db.CreateTournament(tourney)
 	if err == nil {
-		t.Errorf("Created tournament where 'end' before 'start' (ID: %s)", tourney.ID)
-		return
+		t.Fatalf("Created tournament where 'end' before 'start' (ID: %s)", tourney.ID)
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpectable error code for bad request\n%s\n", err)
@@ -108,8 +103,7 @@ func TestCreateTooManyMatches(t *testing.T) {
 
 	err := db.CreateTournament(tourney)
 	if err == nil {
-		t.Errorf("Created tounaments with matches deep is 10\nID: %s\n", tourney.ID)
-		return
+		t.Fatalf("Created tounaments with matches deep is 10\nID: %s\n", tourney.ID)
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpectable error code for bad request\n%s\n", err)
@@ -125,8 +119,7 @@ func TestCreateNotBinaryMatchTree(t *testing.T) {
 
 	err := db.CreateTournament(tourney)
 	if err == nil {
-		t.Errorf("Created tounaments with matches deep is 10\nID: %s\n", tourney.ID)
-		return
+		t.Fatalf("Created tounaments with matches deep is 10\nID: %s\n", tourney.ID)
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpectable error code for bad request\n%s\n", err)
@@ -140,8 +133,7 @@ func TestCreateTourneyDuplicate(t *testing.T) {
 
 	err := db.CreateTournament(tourney)
 	if err == nil {
-		t.Errorf("Created the two same tournaments (ID: %s)\n", tourney.ID.String())
-		return
+		t.Fatalf("Created the two same tournaments (ID: %s)\n", tourney.ID.String())
 	}
 	if err.Code != fasthttp.StatusConflict {
 		t.Errorf("Unexpected error for duplicate:\n%s", err)
@@ -157,8 +149,7 @@ func TestGetTourney(t *testing.T) {
 	received, err := db.GetTourneyByID(original.ID)
 
 	if err != nil {
-		t.Errorf("Can't get created tournament\n%s", err)
-		return
+		t.Fatalf("Can't get created tournament\n%s", err)
 	}
 
 	if original.Title != received.Title {
@@ -193,8 +184,7 @@ func TestGetTourneyGridSymmetric(t *testing.T) {
 
 	arrayMatches, err := db.GetTournamentGrid(tourney.ID)
 	if err != nil {
-		t.Errorf("Can't get tournament grid:\n%s", err)
-		return
+		t.Fatalf("Can't get tournament grid:\n%s", err)
 	}
 
 	var parentMatch *models.Match = nil
@@ -205,18 +195,16 @@ func TestGetTourneyGridSymmetric(t *testing.T) {
 		}
 		if match.NextMatch == nil {
 			if parentMatch != nil {
-				t.Errorf("More than one final match " +
+				t.Fatalf("More than one final match " +
 					"(tourney ID = %s)", tourney.ID.String())
-				return
 			}
 			parentMatch = &arrayMatches.Array[i]
 		}
 	}
 
 	if parentMatch == nil {
-		t.Errorf("The final match is missing " +
+		t.Fatalf("The final match is missing " +
 			"(tourney ID = %s)", tourney.ID.String())
-		return
 	}
 
 	if len(matches) != len(arrayMatches.Array) {
@@ -230,12 +218,10 @@ func TestGetTourneyGridSymmetric(t *testing.T) {
 	}
 
 	if parentMatch.PrevMatch1 == nil {
-		t.Errorf("Left left node is incorrect")
-		return
+		t.Fatalf("Left left node is incorrect")
 	}
 	if parentMatch.PrevMatch2 == nil {
-		t.Errorf("Left right node is incorrect")
-		return
+		t.Fatalf("Left right node is incorrect")
 	}
 
 	if tourney.MatchTree.LeftChild.ID != *parentMatch.PrevMatch1 {
@@ -258,8 +244,7 @@ func TestGetTourneyGridAsymmetric(t *testing.T) {
 
 	arrayMatches, err := db.GetTournamentGrid(tourney.ID)
 	if err != nil {
-		t.Errorf("Can't get tournament grid:\n%s", err)
-		return
+		t.Fatalf("Can't get tournament grid:\n%s", err)
 	}
 
 	for _, match := range arrayMatches.Array {

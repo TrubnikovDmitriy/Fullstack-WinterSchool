@@ -15,7 +15,7 @@ func (array *MatchesArrayForm) GenerateLinks() {
 	for i, match := range array.Array {
 		matchLink := Link{
 			Rel: "Матч",
-			Href: serv.Href + "/tourney/" + match.TourneyID.String() +
+			Href: serv.GetConfig().Href + "/tourney/" + match.TourneyID.String() +
 							"/matches/" + match.ID.String(),
 			Action: "GET",
 		}
