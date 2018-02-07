@@ -28,10 +28,10 @@ func GetGame(ctx *fasthttp.RequestCtx) {
 // POST /v1/games
 func CreateGame(ctx *fasthttp.RequestCtx) {
 
-	game := models.Game{}
-	json.Unmarshal(ctx.PostBody(), &game)
+	game := new(models.Game)
+	json.Unmarshal(ctx.PostBody(), game)
 
-	err := database.CreateGame(&game)
+	err := database.CreateGame(game)
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 	} else {

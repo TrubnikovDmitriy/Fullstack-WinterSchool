@@ -6,10 +6,10 @@ import (
 	. "../../tests"
 	"../../cache"
 	"../../models"
+	"../../handlers"
 	"github.com/satori/go.uuid"
 	"github.com/valyala/fasthttp"
 	"github.com/dgrijalva/jwt-go"
-	"../../handlers"
 )
 
 

@@ -48,14 +48,21 @@ func ActivateCode(code *uuid.UUID) (newAccess *string, newRefresh *string) {
 
 	personUUID, err := redis.String(conn.Do("HGET", "code:" + code.String(), "person_id"))
 	if err != nil {
-		// Кто-то пытается воспользоваться кодом второй раз
-		log.Print(err)
+		// Такого кода не существует
+		return nil, nil
+	}
+
+	access, err := redis.String(conn.Do("HGET", "code:" + code.String(), "access"))
+	if err != nil {
+		// Возможно кто-то пытается воспользоваться кодом второй раз,
+		// на всякий случай, лучше инвалидировать токены
+		log.Printf("Access to the token more than once (personID: %s)\n", personUUID)
 		deleteTokens(uuid.FromStringOrNil(personUUID))
 		return nil, nil
 	}
-	// Код - одноразовый, после прочтения сразу удаляем (code, {refresh, access, person_id})
-	access, err := redis.String(conn.Do("HGET", "code:" + code.String(), "access"))
-	redis.String(conn.Do("DEL", "code:" + code.String()))
+
+	// Чтобы предотвратить повторное чтение удаляем access-token из code
+	redis.String(conn.Do("HDEL", "code:" + code.String(), "access"))
 
 	// Формируем две новые записи: (refresh:uuid, models.OAuth), (person_id:uuid, refresh_uuid)
 	newRefresh = generateRefreshToken()

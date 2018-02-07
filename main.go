@@ -38,6 +38,15 @@ func init() {
 	//router.GET("/v1/:game_title", handlers.GetGame)
 	//router.POST("/v1/:game_title", handlers.CreateGame)
 
+	// Application server
+	router.GET("/v1/app/activate", handlers.ApplicationActivate)
+	router.GET("/v1/app/refresh", handlers.ApplicationRefresh)
+
+	// Auth server
+	router.GET("/v1/oauth/authorize", handlers.CreateToken)
+	router.GET("/v1/oauth/access", handlers.GetToken)
+	router.GET("/v1/oauth/refresh", handlers.RefreshToken)
+
 	// TODO delete test
 	router.GET("/test", database.Test)
 	router.GET("/test2", database.Test2)

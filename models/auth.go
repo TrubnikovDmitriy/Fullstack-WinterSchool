@@ -15,8 +15,9 @@ type OAuth struct {
 	PersonID  uuid.UUID `json:"person_id"`
 	Staff     bool      `json:"staff"`
 
-	AppID 	uuid.UUID `json:"app_id"`
-	Scope 	int       `json:"scope"` // 1 - Read-Only, 2 - Read-Write
+	AppID      uuid.UUID  `json:"app_id"`
+	Scope      int        `json:"scope"` // 1 - Read-Only, 2 - Read-Write
+	AccessCode *uuid.UUID `json:"code"`
 }
 
 func (oauth *OAuth) Validate() *serv.ErrorCode {
