@@ -166,13 +166,7 @@ func GetNewOAuth(person *Person, scope int) *OAuth {
 
 func CreateNewOAuth(scope int) *OAuth {
 	person := CreateNewPerson()
-	id, _ := uuid.NewV4()
-	oauth := &OAuth{
-		Email: person.Email,
-		Password: person.Password,
-		AppID: id,
-		Scope: scope,
-	}
+	oauth := GetNewOAuth(person, scope)
 
 	db.Auth(oauth)
 

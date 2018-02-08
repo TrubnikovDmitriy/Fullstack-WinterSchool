@@ -77,8 +77,9 @@ func TestGetPerson(t *testing.T) {
 
 	if receivedPerson.FirstName != originalPerson.FirstName {
 		t.Errorf("Received person has another first name\n" +
-			"Recieved person ID:\t%s,\nOriginal person ID:\t%s\n",
-			receivedPerson.ID.String(), originalPerson.ID.String())
+			"Recieved person name:\t%s,\nOriginal person name:\t%s\n",
+			receivedPerson.FirstName, originalPerson.FirstName)
+
 	}
 	if receivedPerson.LastName != originalPerson.LastName {
 		t.Errorf("Received person has another last name\n" +

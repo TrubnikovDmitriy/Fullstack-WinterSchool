@@ -22,6 +22,7 @@ func TestCreateGameHappyPath(t *testing.T) {
 func TestCreateGameWithoutTitle(t *testing.T) {
 	game := GetNewGame()
 	game.Title = ""
+
 	err := db.CreateGame(game)
 	if err == nil {
 		t.Fatalf("Game without title has been created")
@@ -60,7 +61,7 @@ func TestCreateGameWithTooLongAbout(t *testing.T) {
 	game.Title = "This about is " + strings.Repeat("very, ", 10) + "very long"
 	err := db.CreateGame(game)
 	if err == nil {
-		t.Fatalf("Game with too about text has been created\ntitle: '%s'", game.Title)
+		t.Fatalf("Game with too long about-field has been created\ntitle: '%s'", game.Title)
 	}
 	if err.Code != fasthttp.StatusBadRequest {
 		t.Errorf("Unexpectable error for creating game with incorrect fields:\n%s", err)
@@ -102,15 +103,16 @@ func TestGetGameHappy(t *testing.T) {
 }
 
 func TestGetTheAbsentGame(t *testing.T) {
-	id, _ := uuid.NewV4()
-	game, err := db.GetGameByID(id)
+
+	randomID, _ := uuid.NewV4()
+	game, err := db.GetGameByID(randomID)
+
 	if err == nil {
 		if game != nil {
 			t.Fatalf("Got a non-existing game\n" +
-				"requestID:\t%s\nresponseID:\t%s\n", id.String(), game.ID.String())
-		} else {
-			t.Fatalf("Got a non-existing game\nrequestID:\t%s\n", id.String())
+				"requestID:\t%s\nresponseID:\t%s\n", randomID.String(), game.ID.String())
 		}
+		t.Fatalf("Got a non-existing game\nrequestID:\t%s\n", randomID.String())
 	}
 	if err.Code != fasthttp.StatusNotFound {
 		t.Errorf("Unexpectable error for getting non-existing game:\n%s", err)
@@ -118,10 +120,12 @@ func TestGetTheAbsentGame(t *testing.T) {
 }
 
 func TestGetFewGames(t *testing.T) {
+
 	var games [5]*models.Game
 	for i := range games {
 		games[i] = CreateNewGame()
 	}
+
 	for _, game := range games {
 		getGame, err := db.GetGameByID(game.ID)
 		if err != nil {

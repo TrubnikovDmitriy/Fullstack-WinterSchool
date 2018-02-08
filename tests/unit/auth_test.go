@@ -52,7 +52,7 @@ func TestAuthFail(t *testing.T) {
 	}
 }
 
-func TestCacheCreateCode(t *testing.T) {
+func TestCreateAccessCode(t *testing.T) {
 
 	oauth := CreateNewOAuth(2)
 	code := cache.CreateCode(oauth)
@@ -62,7 +62,7 @@ func TestCacheCreateCode(t *testing.T) {
 	}
 }
 
-func TestCacheActivateCode(t *testing.T) {
+func TestActivateAccessCode(t *testing.T) {
 
 	oauth := CreateNewOAuth(2)
 	code := cache.CreateCode(oauth)
@@ -83,10 +83,11 @@ func TestCacheActivateCode(t *testing.T) {
 	compare(oauth, claims, t)
 }
 
-func TestCacheRefreshToken(t *testing.T) {
+func TestRefreshToken(t *testing.T) {
 
 	oauth := CreateNewOAuth(2)
 	code := cache.CreateCode(oauth)
+
 	_, refreshToken := cache.ActivateCode(code)
 	accessToken, refreshToken := cache.RefreshToken(*refreshToken)
 
@@ -105,7 +106,7 @@ func TestCacheRefreshToken(t *testing.T) {
 	compare(oauth, claims, t)
 }
 
-func TestCacheDoubleRefreshDiffToken(t *testing.T) {
+func TestDoubleUseRefreshDiffToken(t *testing.T) {
 
 	oauth := CreateNewOAuth(2)
 	code := cache.CreateCode(oauth)
@@ -128,7 +129,7 @@ func TestCacheDoubleRefreshDiffToken(t *testing.T) {
 	compare(oauth, claims, t)
 }
 
-func TestCacheDoubleRefreshSameToken(t *testing.T) {
+func TestDoubleUseRefreshSameToken(t *testing.T) {
 
 	oauth := CreateNewOAuth(2)
 	code := cache.CreateCode(oauth)
@@ -145,6 +146,44 @@ func TestCacheDoubleRefreshSameToken(t *testing.T) {
 		t.Fatalf("Can't refresh token (perosn_id:%s)", oauth.PersonID)
 	}
 }
+
+func TestDoubleGetAccessToken(t *testing.T) {
+
+	oauth := CreateNewOAuth(2)
+
+	// Первый обмен кода на токены
+	code := cache.CreateCode(oauth)
+	cache.ActivateCode(code)
+
+	// Второй обмен (должен провалиться)
+	access, refresh := cache.ActivateCode(code)
+
+	if access != nil || refresh != nil {
+		t.Errorf("Tokens are not reset after second exchange access-code" +
+			"(code := %s)", code.String())
+	}
+}
+
+func TestReAuth(t *testing.T) {
+
+	oauth := CreateNewOAuth(2)
+
+	// Первая регистрация
+	code := cache.CreateCode(oauth)
+	_, refreshToken := cache.ActivateCode(code)
+
+	// Вторая регистрация
+	code = cache.CreateCode(oauth)
+	_, _ = cache.ActivateCode(code)
+
+	access, refresh := cache.RefreshToken(*refreshToken)
+	if access != nil || refresh != nil {
+		t.Errorf("Tokens are not reset after reauth " +
+			"(personID := %s)", oauth.PersonID.String())
+	}
+}
+
+
 
 func compare(oauth *models.OAuth, claims *jwt.MapClaims, t* testing.T) {
 
