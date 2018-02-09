@@ -5,6 +5,7 @@ import (
 	"../models"
 	"github.com/valyala/fasthttp"
 	"encoding/json"
+	"github.com/satori/go.uuid"
 )
 
 
@@ -28,10 +29,19 @@ func GetTournamentByID(ctx *fasthttp.RequestCtx) {
 // POST /v1/tourney
 func CreateTournament(ctx *fasthttp.RequestCtx) {
 
-	tournament := models.Tournament{}
-	json.Unmarshal(ctx.PostBody(), &tournament)
+	claims, err := GetClaimsFromCookie(ctx)
+	if err != nil {
+		err.WriteAsJsonResponseTo(ctx)
+		return
+	}
 
-	err := database.CreateTournament(&tournament)
+	tournament := new(models.Tournament)
+	json.Unmarshal(ctx.PostBody(), tournament)
+
+	tournament.OrganizeID = uuid.FromStringOrNil(claims["person_id"].(string))
+	tournament.OrganizeName = claims["first_name"].(string) + claims["last_name"].(string)
+
+	err = database.CreateTournament(tournament)
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 	} else {

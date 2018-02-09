@@ -57,6 +57,9 @@ func GetNewTournament() *Tournament {
 		Started: timeNow,
 		Ended: timeNow.AddDate(0, 3,0),
 		About: postfix[4],
+		OrganizeName: GenerateFirstName() + " " + GenerateLastName(),
+		OrganizeID: id,
+		GameID: CreateNewGame().ID,
 	}
 
 	return &tourney
@@ -189,6 +192,6 @@ func GenerateLastName() string {
 
 var tg = text_generator.New()
 const FirstNameTemplate string = "{Vasya|Peter|Nikita|Sasha|Dmitriy|Enakentiy|John|Masha|Natasha|Tony}"
-const LastNameTemplate string = "{Silaev|Kuzmin|Krasnov|Sitnikov|Smirnov|Gorbenko|Trubnikov|Smirnova}"
+const LastNameTemplate string = "{Silaev|Kuzmin|Krasnov|Pupkin|Smirnov|Gorbenko|Trubnikov|Smirnova}"
 const MailsTemplate string = "{@mail.ru|@yandex.ru|@gmail.com|@rambler.com}"
 

@@ -5,6 +5,9 @@ import (
 	"../services"
 	"github.com/valyala/fasthttp"
 	"github.com/satori/go.uuid"
+	"log"
+	"github.com/jackc/pgx/pgtype"
+	"sort"
 )
 
 
@@ -21,6 +24,61 @@ func GetGameByID(id uuid.UUID) (*models.Game, *serv.ErrorCode) {
 	}
 
 	return &game, nil
+}
+
+func GetGames(limit int, page int) (*models.Games, *serv.ErrorCode)  {
+
+	if limit < 0 || 12 < limit {
+		limit = 6
+	}
+	if page < 0 {
+		page = 1
+	}
+
+	offset := limit * (page - 1)
+
+
+	const prepareStatement = "SelectAllGames"
+	games := make(models.Games, 0, serv.GetConfig().NumberOfShards * limit / 2)
+
+	for i := 0; i < serv.GetConfig().NumberOfShards; i++ {
+
+		db := choiceMasterSlave(masterConnectionPool[i], slaveConnectionPool[i])
+		db.Prepare(prepareStatement, "SELECT id, title, about " +
+			"FROM games ORDER BY title LIMIT $1 OFFSET $2")
+
+		rows, err := db.Query(prepareStatement, limit, offset)
+
+		if err != nil {
+			log.Print(err)
+			rows.Close()
+			return nil, serv.NewServerError(err)
+		}
+
+		var gameID pgtype.UUID
+
+		for rows.Next() {
+			game := models.Game{}
+			err = rows.Scan(&gameID, &game.Title, &game.About)
+			if err != nil {
+				log.Printf("%s : %s", prepareStatement, err)
+				rows.Close()
+				continue
+			}
+
+			game.ID = castUUID(gameID)
+			games = append(games, game)
+		}
+		rows.Close()
+	}
+
+	sort.Sort(games)
+	if limit > games.Len() {
+		limit = games.Len()
+	}
+	returningGames := games[:limit]
+
+	return &returningGames, nil
 }
 
 func CreateGame(game *models.Game) *serv.ErrorCode {

@@ -41,6 +41,8 @@ func GetPlayersOfTeam(teamID uuid.UUID) ([]*models.Player, *serv.ErrorCode) {
 			"FROM players WHERE team_id = $1 AND retire = FALSE;")
 
 	rows, err := db.Query(getPlayersByTeamID, teamID)
+	defer rows.Close()
+
 	if err != nil {
 		return nil, checkError(err)
 	}
@@ -52,7 +54,8 @@ func GetPlayersOfTeam(teamID uuid.UUID) ([]*models.Player, *serv.ErrorCode) {
 		player := models.Player{TeamID: teamID}
 		err = rows.Scan(&playerID, &personID, &player.Nickname, &player.TeamName)
 		if err != nil {
-			return nil, checkError(err)
+			log.Printf("%s : %s", getPlayersByTeamID, err)
+			continue
 		}
 
 		player.Retire = false

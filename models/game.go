@@ -12,7 +12,6 @@ type Game struct {
 	Title string `json:"title"`
 	About string `json:"about"`
 
-	GameTitle string `json:"game_title"`
 	OrganizeID uuid.UUID `json:"organize_id"`
 
 	Links []Link `json:"href,omitempty"`
@@ -42,6 +41,36 @@ func (game *Game) GenerateLinks() {
 func (game *Game) WriteAsJsonResponseTo(ctx *fasthttp.RequestCtx, statusCode int) {
 	game.GenerateLinks()
 	resp, _ := json.Marshal(game)
+	ctx.Write(resp)
+	ctx.SetContentType("application/json; charset=utf-8")
+	ctx.SetStatusCode(statusCode)
+}
+
+
+
+type Games []Game
+
+func (games Games) Len() int {
+	return len(games)
+}
+
+func (games Games) Swap(i, j int) {
+	games[i], games[j] = games[j], games[i]
+}
+
+func (games Games) Less(i, j int) bool {
+	return games[i].Title < games[j].Title
+}
+
+func (games Games) GenerateLinks() {
+	for i := range games {
+		games[i].GenerateLinks()
+	}
+}
+
+func (games Games) WriteAsJsonResponseTo(ctx *fasthttp.RequestCtx, statusCode int) {
+	games.GenerateLinks()
+	resp, _ := json.Marshal(games)
 	ctx.Write(resp)
 	ctx.SetContentType("application/json; charset=utf-8")
 	ctx.SetStatusCode(statusCode)

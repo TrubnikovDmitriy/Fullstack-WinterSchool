@@ -16,6 +16,10 @@ type Tournament struct {
 	Ended   time.Time `json:"ended"`
 	About   string    `json:"about"`
 
+	GameID       uuid.UUID `json:"game_id"`
+	OrganizeID   uuid.UUID `json:"organize_id"`
+	OrganizeName string    `json:"organize_name"`
+
 	MatchTree *MatchesTreeForm `json:"matches_tree, omitempty"`
 	Matches []*Match           `json:"matches, omitempty"`
 	Links []Link               `json:"href, omitempty"`

@@ -49,27 +49,29 @@ func GetMatchByID(tourneyID uuid.UUID, matchID uuid.UUID) (*models.Match, *serv.
 	return &match, nil
 }
 
-func CreateMatches(matches []models.Match, sharedKey uuid.UUID) *serv.ErrorCode {
+func CreateMatches(matches []models.Match, tourney *models.Tournament) *serv.ErrorCode {
 
-	master := sharedKeyForWriteByID(sharedKey)
+	master := sharedKeyForWriteByID(tourney.ID)
 
 	const prepareInsert = "insertMatches"
 	master.Prepare(prepareInsert,
 		"INSERT INTO matches" +
 			"(id, tourn_id, prev_match_id_1, " +
-			"prev_match_id_2, next_match_id, start_time) " +
-			"VALUES($1, $2, $3, $4, $5, $6);")
+			"prev_match_id_2, next_match_id, " +
+			"start_time, organize_id) " +
+			"VALUES($1, $2, $3, $4, $5, $6, $7);")
 	batch := master.BeginBatch()
 	defer batch.Close()
 
 	for _, match := range matches {
 		batch.Queue(prepareInsert, []interface{}{
 			match.ID,
-			sharedKey,
+			tourney.ID,
 			match.PrevMatch1,
 			match.PrevMatch2,
 			match.NextMatch,
 			match.StartTime,
+			tourney.OrganizeID,
 		}, nil, nil)
 	}
 

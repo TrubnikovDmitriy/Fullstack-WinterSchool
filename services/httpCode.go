@@ -36,6 +36,23 @@ func NewServerError(err error) *ErrorCode {
 	}
 }
 
+func NewUnauthorized() *ErrorCode {
+	return &ErrorCode{
+		Code: fasthttp.StatusUnauthorized,
+		Message: "Для совершения указанного действия необходимо зарегистрироваться",
+		Link: GetConfig().Href + "/v1/oauth/authorize",
+	}
+
+}
+
+func NewForbidden(message string) *ErrorCode {
+	return &ErrorCode{
+		Code: fasthttp.StatusForbidden,
+		Message: message,
+	}
+
+}
+
 func (err *ErrorCode) String() string {
 
 	printString := "Error code: " + strconv.Itoa(err.Code) +

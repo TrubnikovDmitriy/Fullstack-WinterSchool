@@ -11,9 +11,6 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-const CookieAccess = "ws_auth"
-const CookieRefresh = "ws_auth_refresh"
-
 
 func CreateToken(ctx *fasthttp.RequestCtx) {
 
