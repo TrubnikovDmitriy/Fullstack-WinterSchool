@@ -82,6 +82,7 @@ func choiceMasterSlave(masterN *pgx.ConnPool, slaveN *pgx.ConnPool) *pgx.ConnPoo
 	} else {
 		return slaveN
 	}
+
 }
 
 func getID() uuid.UUID {

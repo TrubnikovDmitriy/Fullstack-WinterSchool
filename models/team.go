@@ -8,10 +8,12 @@ import (
 )
 
 type Team struct {
-	ID    uuid.UUID	`json:"-"`
-	Name  string  	`json:"team_name"`
-	About string  	`json:"about"`
-	CoachID uuid.UUID `json:"coach_id"`
+	ID      uuid.UUID `json:"-"`
+	Name    string    `json:"team_name"`
+	About   string    `json:"about"`
+
+	CoachID   uuid.UUID `json:"coach_id"`
+	CoachName string    `json:"coach_name"`
 
 	Links []Link 	`json:"href"`
 }

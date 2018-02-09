@@ -80,7 +80,7 @@ func TestCreateGameConflict(t *testing.T) {
 }
 
 
-func TestGetGameHappy(t *testing.T) {
+func TestGetGameHappyPath(t *testing.T) {
 	gameOriginal := GetNewGame()
 	db.CreateGame(gameOriginal)
 

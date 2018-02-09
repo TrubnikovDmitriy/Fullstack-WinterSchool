@@ -47,12 +47,12 @@ func CreateTeam(team *models.Team) *serv.ErrorCode {
 	team.ID = getID()
 	const createTeam = "CreateTeam"
 	master := sharedKeyForWriteByID(team.ID)
-	master.Prepare(createTeam,
-		"INSERT INTO teams(id, team_name, about) VALUES ($1, $2, $3);")
+	master.Prepare(createTeam, "INSERT INTO " +
+		"teams(id, team_name, about, coach_id, coach_name) VALUES ($1, $2, $3, $4, $5);")
 	
 
 	// Добавление
-	_, err = master.Exec(createTeam, team.ID, team.Name, team.About)
+	_, err = master.Exec(createTeam, team.ID, team.Name, team.About, team.CoachID, team.CoachName)
 	if err != nil {
 		return serv.NewServerError(err)
 	}

@@ -39,7 +39,7 @@ func CreateTournament(ctx *fasthttp.RequestCtx) {
 	json.Unmarshal(ctx.PostBody(), tournament)
 
 	tournament.OrganizeID = uuid.FromStringOrNil(claims["person_id"].(string))
-	tournament.OrganizeName = claims["first_name"].(string) + claims["last_name"].(string)
+	tournament.OrganizeName = claims["first_name"].(string) + " " + claims["last_name"].(string)
 
 	err = database.CreateTournament(tournament)
 	if err != nil {

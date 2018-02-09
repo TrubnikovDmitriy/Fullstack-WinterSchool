@@ -78,11 +78,16 @@ func CreateNewTournament() *Tournament {
 
 
 func GetNewTeam() *Team {
+
+	coach := CreateNewPerson()
+
 	id, _ := uuid.NewV1()
 	uniqueSuffix := strings.Split(id.String(), "-")[0]
 	team := Team {
-		Name: "Name-" + uniqueSuffix,
-		About: "A few words about this amazing team",
+		Name:      "Name-" + uniqueSuffix,
+		About:     "A few words about this amazing team",
+		CoachID:   coach.ID,
+		CoachName: coach.FirstName + " " + coach.LastName,
 	}
 
 	return &team
