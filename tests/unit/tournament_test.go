@@ -261,6 +261,44 @@ func TestGetTourneyGridAsymmetric(t *testing.T) {
 }
 
 
+func TestGetTournamentsByGameID(t *testing.T) {
+	gameID := CreateNewGame().ID
+
+	tourneys := make([]*models.Tournament, 5)
+	for i := range tourneys {
+		tourneys[i] = GetNewTournament()
+		tourneys[i].GameID = gameID
+		tourneys[i].MatchTree = &GetNewMatches(3)[0]
+
+		db.CreateTournament(tourneys[i])
+	}
+
+	getTourneys, err := db.GetTournamentsByGameID(gameID, 1, 6)
+	if err != nil {
+		t.Fatalf("Can't get tourneys by game ID = %s\n", gameID.String())
+	}
+
+	if getTourneys == nil {
+		t.Fatalf("Getted array of tourneys is nil\n(game ID = %s)\n", gameID.String())
+	}
+
+	if len(*getTourneys) != len(tourneys) {
+		t.Fatalf("Wrong number of tourneys had returned (%d instead %d)\n" +
+			"(game ID = %s)\n", len(*getTourneys), len(tourneys), gameID.String())
+	}
+
+	orig: for _, original := range tourneys {
+		for _, getted := range *getTourneys {
+			if original.ID == getted.ID {
+				continue orig
+			}
+		}
+		t.Errorf("Wrong instance of tourneys had returned\n" +
+			"(game ID = %s)\n", gameID.String())
+	}
+}
+
+
 
 
 

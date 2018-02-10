@@ -9,7 +9,7 @@ import (
 )
 
 
-// GET /v1/tourney/{id}
+// GET /v1/tourney/{tourney_id}
 func GetTournamentByID(ctx *fasthttp.RequestCtx) {
 
 	id, err := getPathID(ctx.UserValue("tourney_id").(string))
@@ -25,6 +25,34 @@ func GetTournamentByID(ctx *fasthttp.RequestCtx) {
 		tourney.WriteAsJsonResponseTo(ctx, fasthttp.StatusOK)
 	}
 }
+
+
+// GET /v1/game/{game_id}/tourney
+func GetTournamentsByGameID(ctx *fasthttp.RequestCtx) {
+
+	gameID, err := getPathID(ctx.UserValue("tourney_id").(string))
+	if err != nil {
+		err.WriteAsJsonResponseTo(ctx)
+		return
+	}
+
+	limitStr := ctx.QueryArgs().Peek("limit")
+	pageStr := ctx.QueryArgs().Peek("page")
+
+	limit := getIntFromBytes(limitStr, 6)
+	page := getIntFromBytes(pageStr, 1)
+
+	tourneys, err := database.GetTournamentsByGameID(gameID, limit, page)
+	if err != nil {
+		err.WriteAsJsonResponseTo(ctx)
+		return
+	}
+	resp, _ := json.Marshal(tourneys)
+	ctx.Write(resp)
+	ctx.SetContentType("application/json; charset=utf-8")
+	ctx.SetStatusCode(fasthttp.StatusOK)
+}
+
 
 // POST /v1/tourney
 func CreateTournament(ctx *fasthttp.RequestCtx) {
