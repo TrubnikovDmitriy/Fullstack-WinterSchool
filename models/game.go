@@ -12,8 +12,6 @@ type Game struct {
 	Title string `json:"title"`
 	About string `json:"about"`
 
-	OrganizeID uuid.UUID `json:"organize_id"`
-
 	Links []Link `json:"href,omitempty"`
 }
 
@@ -22,11 +20,10 @@ func (game *Game) Validate() *serv.ErrorCode {
 	if err != nil {
 		return err
 	}
-
-	err = fieldLengthValidate(game.About, "about-field")
-	if err != nil {
-		return err
+	if len(game.About) == 0 {
+		return serv.NewBadRequest("The about-field is missing")
 	}
+
 	return nil
 }
 

@@ -135,7 +135,7 @@ func GetNewGame() *Game {
 	uniqueSuffix := strings.Split(id.String(), "-")[0]
 	game := Game {
 		Title: "Title-" + uniqueSuffix,
-		About: "Some text about useful things",
+		About: "Some text about useful things " + id.String(),
 	}
 
 	return &game

@@ -31,7 +31,7 @@ func TestMatchGetChild(t *testing.T) {
 
 	match, err := db.GetMatchByID(tourney.ID, matches[1].ID)
 	if err != nil {
-		t.Errorf("Can't get simple mathch\n%s", err)
+		t.Fatalf("Can't get simple mathch\n%s", err)
 	}
 	if *match.NextMatch != matches[0].ID {
 		t.Errorf("Incorrect next match")
