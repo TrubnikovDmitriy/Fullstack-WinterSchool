@@ -111,6 +111,7 @@ func TestCreateTooManyMatches(t *testing.T) {
 }
 
 func TestCreateNotBinaryMatchTree(t *testing.T) {
+
 	tourney := GetNewTournament()
 	matches := GetNewMatches(3)
 	matches[2].RightChild = nil
@@ -295,6 +296,33 @@ func TestGetTournamentsByGameID(t *testing.T) {
 		}
 		t.Errorf("Wrong instance of tourneys had returned\n" +
 			"(game ID = %s)\n", gameID.String())
+	}
+}
+
+func TestGetTournamentsByGameIDWithSecondPage(t *testing.T) {
+	gameID := CreateNewGame().ID
+
+	tourneys := make([]*models.Tournament, 5)
+	for i := range tourneys {
+		tourneys[i] = GetNewTournament()
+		tourneys[i].GameID = gameID
+		tourneys[i].MatchTree = &GetNewMatches(3)[0]
+
+		db.CreateTournament(tourneys[i])
+	}
+
+	getTourneys, err := db.GetTournamentsByGameID(gameID, 2, 4)
+	if err != nil {
+		t.Fatalf("Can't get tourneys by game ID = %s\n", gameID.String())
+	}
+
+	if getTourneys == nil {
+		t.Fatalf("Getted array of tourneys is nil\n(game ID = %s)\n", gameID.String())
+	}
+
+	if len(*getTourneys) != 1 {
+		t.Fatalf("Wrong number of tourneys had returned (%d instead 0)\n" +
+			"(game ID = %s)\n", len(*getTourneys), gameID.String())
 	}
 }
 

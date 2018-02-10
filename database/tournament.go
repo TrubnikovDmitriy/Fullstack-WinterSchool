@@ -100,10 +100,10 @@ func CreateTournament(tourney *models.Tournament) *serv.ErrorCode {
 
 func GetTournamentsByGameID(gameID uuid.UUID, page int, limit int) (*[]models.Tournament, *serv.ErrorCode) {
 
-	if limit < 0 || 12 < limit {
+	if limit <= 0 || 12 < limit {
 		limit = 6
 	}
-	if page < 0 {
+	if page <= 0 {
 		page = 1
 	}
 

@@ -6,6 +6,8 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/satori/go.uuid"
 	"github.com/jackc/pgx/pgtype"
+	"github.com/jackc/pgx"
+	"log"
 )
 
 
@@ -54,6 +56,83 @@ func CreateTeam(team *models.Team) *serv.ErrorCode {
 	// Добавление
 	_, err = master.Exec(createTeam, team.ID, team.Name, team.About, team.CoachID, team.CoachName)
 	if err != nil {
+		return serv.NewServerError(err)
+	}
+
+	return nil
+}
+
+func AddPlayerInTeam(player *models.Player) *serv.ErrorCode {
+
+	// Валидация
+	errCode := player.Validate()
+	if errCode != nil {
+		return errCode
+	}
+
+
+	// Проверка, что человек играющий за этого персонажа существует
+	const checkPlayerExist = "CheckPlayerExist"
+	db := sharedKeyForReadByID(player.PersonID)
+	db.Prepare(checkPlayerExist, "SELECT id FROM persons WHERE id = $1")
+
+	err := db.QueryRow(checkPlayerExist, player.PersonID).Scan(new(pgtype.UUID))
+	if err == pgx.ErrNoRows {
+		return serv.NewBadRequest("Such person does not exist")
+	}
+	if err != nil {
+		log.Print(err)
+		return serv.NewServerError(err)
+	}
+
+
+	// Шардирование по ключу UUID команды
+	master := sharedKeyForWriteByID(player.TeamID)
+	const checkTeamExist = "CheckTeamExist"
+	const addPlayerInTeam = "AddPlayerInTeam"
+	master.Prepare(checkTeamExist,
+		"SELECT team_name FROM teams WHERE id = $1")
+	master.Prepare(addPlayerInTeam,
+		"INSERT INTO players(id, person_id, nickname, team_id, team_name) " +
+			"VALUES($1, $2, $3, $4, $5);")
+
+
+	// Проверка, что команда существует
+	err = master.QueryRow(checkTeamExist, player.TeamID).Scan(&player.TeamName)
+	if err == pgx.ErrNoRows {
+		return serv.NewBadRequest("Such person does not exist")
+	}
+	if err != nil {
+		log.Print(err)
+		return serv.NewServerError(err)
+	}
+
+
+	// Создание нового игрока
+	player.ID = getID()
+	_, err = master.Exec(addPlayerInTeam, player.ID, player.PersonID,
+		player.Nickname, player.TeamID, player.TeamName)
+	if err != nil {
+		return serv.NewServerError(err)
+	}
+
+
+	return nil;
+}
+
+func DeletePlayerFromTeam(player *models.Player) *serv.ErrorCode {
+
+	if player.ID == uuid.Nil || player.TeamID == uuid.Nil {
+		return serv.NewBadRequest("One of sent IDs is incorrect")
+	}
+
+	const deletePlayerFromTeam = "DeletePlayerFromTeam"
+	db := sharedKeyForWriteByID(player.ID)
+	db.Prepare(deletePlayerFromTeam, "UPDATE players SET retire = TRUE WHERE id = $1")
+
+	_, err := db.Exec(deletePlayerFromTeam, player.ID)
+	if err != nil {
+		log.Print(err)
 		return serv.NewServerError(err)
 	}
 

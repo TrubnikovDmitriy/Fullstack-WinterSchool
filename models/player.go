@@ -22,7 +22,7 @@ type Player struct {
 }
 
 
-func (player *Player)  Validate() *serv.ErrorCode {
+func (player *Player) Validate() *serv.ErrorCode {
 
 	err := fieldLengthValidate(player.Nickname, "nickname")
 	if err != nil {

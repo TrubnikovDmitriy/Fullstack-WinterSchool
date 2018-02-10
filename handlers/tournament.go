@@ -27,22 +27,22 @@ func GetTournamentByID(ctx *fasthttp.RequestCtx) {
 }
 
 
-// GET /v1/game/{game_id}/tourney
+// GET /v1/game/{game_id}/tournaments
 func GetTournamentsByGameID(ctx *fasthttp.RequestCtx) {
 
-	gameID, err := getPathID(ctx.UserValue("tourney_id").(string))
+	gameID, err := getPathID(ctx.UserValue("game_id").(string))
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return
 	}
-
 	limitStr := ctx.QueryArgs().Peek("limit")
 	pageStr := ctx.QueryArgs().Peek("page")
 
 	limit := getIntFromBytes(limitStr, 6)
 	page := getIntFromBytes(pageStr, 1)
 
-	tourneys, err := database.GetTournamentsByGameID(gameID, limit, page)
+
+	tourneys, err := database.GetTournamentsByGameID(gameID, page, limit)
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 		return

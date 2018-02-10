@@ -50,14 +50,27 @@ func GetTeamPlayers(ctx *fasthttp.RequestCtx) {
 	}
 }
 
-
-// POST /v1/players (пользователь должен быть авторизирован)
+// POST /v1/team/{team_id}/players
 func CreatePlayer(ctx *fasthttp.RequestCtx) {
 
-	var player models.Player
-	json.Unmarshal(ctx.PostBody(), &player)
+	player := new(models.Player)
+	json.Unmarshal(ctx.PostBody(), player)
 
-	err := database.CreatePlayer(&player)
+	err := database.AddPlayerInTeam(player)
+	if err != nil {
+		err.WriteAsJsonResponseTo(ctx)
+	} else {
+		player.WriteAsJsonResponseTo(ctx, fasthttp.StatusCreated)
+	}
+}
+
+// DELETE /v1/team/{team_id}/players
+func DeletePlayer(ctx *fasthttp.RequestCtx) {
+
+	player := new(models.Player)
+	json.Unmarshal(ctx.PostBody(), player)
+
+	err := database.DeletePlayerFromTeam(player)
 	if err != nil {
 		err.WriteAsJsonResponseTo(ctx)
 	} else {

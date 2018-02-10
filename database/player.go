@@ -1,14 +1,11 @@
 package database
 
-
 import (
 	"../models"
 	"../services"
-	"github.com/valyala/fasthttp"
 	"log"
 	"github.com/satori/go.uuid"
 	"github.com/jackc/pgx/pgtype"
-	"github.com/jackc/pgx"
 )
 
 
@@ -67,57 +64,4 @@ func GetPlayersOfTeam(teamID uuid.UUID) ([]*models.Player, *serv.ErrorCode) {
 	}
 
 	return players, nil
-}
-
-func CreatePlayer(player *models.Player) *serv.ErrorCode {
-
-	// Валидация
-	errorCode := player.Validate()
-	if errorCode != nil {
-		return errorCode
-	}
-
-
-	// Проверка приглашений для данного игрока
-	const checkInvite = "CheckInvite"
-	db := sharedKeyForReadByID(player.PersonID)
-	db.Prepare(checkInvite, "SELECT team_name FROM teams " +
-		"WHERE person_id = $1 AND team_id = $2")
-
-	err := db.QueryRow(checkInvite, player.PersonID, player.TeamID).Scan(&player.TeamName)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return &serv.ErrorCode{
-				Code: fasthttp.StatusForbidden,
-				Message: "You're not invited to the given team, check out the invite list",
-				Link: serv.GetConfig().Href + "/persons/" + player.PersonID.String() + "/invite-list",
-			}
-		}
-		log.Print(err)
-		return &serv.ErrorCode{ Code:fasthttp.StatusInternalServerError }
-	}
-
-
-	// Генерация ID и шардирование
-	player.ID = getID()
-	db = sharedKeyForWriteByID(player.TeamID)
-	const createPlayer = "CreatePlayer"
-	db.Prepare(createPlayer,
-		"INSERT INTO players(id, person_id, nickname, team_id, team_name) " +
-			"VALUES ($1, $2, $3, $4, $5, $6);")
-
-
-	// Создание нового игрока
-	_, err = db.Exec(createPlayer, player.ID, player.PersonID,
-		player.Nickname, player.TeamID, player.TeamName)
-	if err != nil {
-		return serv.NewServerError(err)
-	}
-
-
-	// Удалить инвайт
-	db = sharedKeyForWriteByID(player.PersonID)
-	db.Exec("DELETE FROM teams WHERE person_id = $1", player.PersonID)
-
-	return nil
 }

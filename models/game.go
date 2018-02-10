@@ -28,9 +28,14 @@ func (game *Game) Validate() *serv.ErrorCode {
 }
 
 func (game *Game) GenerateLinks() {
-		game.Links = append(game.Links, Link {
-		Rel: "game",
-		Href: serv.GetConfig().Href + "/games/" + game.ID.String(),
+	game.Links = append(game.Links, Link{
+		Rel:    "game",
+		Href:   serv.GetConfig().Href + "/games/" + game.ID.String(),
+		Action: "GET",
+	})
+	game.Links = append(game.Links, Link {
+		Rel: "tournaments",
+		Href: serv.GetConfig().Href + "/games/" + game.ID.String() + "/tournaments",
 		Action: "GET",
 	})
 }

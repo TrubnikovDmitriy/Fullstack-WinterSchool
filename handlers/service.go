@@ -27,6 +27,9 @@ func getPathID(strID string) (uuid.UUID, *serv.ErrorCode) {
 }
 
 func getIntFromBytes(number []byte, defaulting int) int {
+	if len(number) == 0 {
+		return defaulting
+	}
 	integer, err := strconv.Atoi(string(number))
 	if err != nil {
 		return defaulting

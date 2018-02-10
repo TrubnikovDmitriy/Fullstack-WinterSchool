@@ -23,21 +23,25 @@ func init() {
 
 	// players
 	router.GET("/v1/teams/:team_id/players/:player_id", handlers.GetPlayer)
+	router.DELETE("/v1/teams/:team_id/players/:player_id", handlers.DeletePlayer)
 	router.GET("/v1/teams/:team_id/players", handlers.GetTeamPlayers)
 	router.POST("/v1/players", handlers.CreatePlayer)
 
 	// matches
 	router.GET("/v1/tourney/:tourney_id/matches/:match_id", handlers.GetMatch)
+	router.PUT("/v1/tourney/:tourney_id/matches/:match_id", handlers.UpdateMatch)
 
 	// tournaments
 	router.GET("/v1/tourney/:tourney_id", handlers.GetTournamentByID)
 	router.GET("/v1/tourney/:tourney_id/matches", handlers.GetTournamentGrid)
 	router.POST("/v1/tourney", handlers.CreateTournament)
+	//router.PUT("/v1/tourney/:tourney_id", handlers.UpdateTournament)
 
 	// games
+	router.GET("/v1/games/:game_id/tournaments", handlers.GetTournamentsByGameID)
 	router.GET("/v1/games/:game_id", handlers.GetGame)
-	router.POST("/v1/games", handlers.CreateGame)
 	router.GET("/v1/games", handlers.GetGames)
+	router.POST("/v1/games", handlers.CreateGame)
 
 	// Application server
 	router.GET("/v1/app/activate", handlers.ApplicationActivate)
@@ -54,6 +58,6 @@ func init() {
 }
 
 func main() {
-	fasthttp.ListenAndServe(":5555", router.Handler)
+	fasthttp.ListenAndServe(":5554", router.Handler)
 	// андрей смирнов
 }

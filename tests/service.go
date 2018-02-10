@@ -8,6 +8,7 @@ import (
 	"time"
 	"strings"
 	"github.com/liderman/text-generator"
+	"math/rand"
 )
 
 // Функция для создания дерева матчей заданной глубины (односторонняя связь parent->child),
@@ -134,7 +135,7 @@ func GetNewGame() *Game {
 	id, _ := uuid.NewV1()
 	uniqueSuffix := strings.Split(id.String(), "-")[0]
 	game := Game {
-		Title: "Title-" + uniqueSuffix,
+		Title: "Game-title-" + uniqueSuffix,
 		About: "Some text about useful things " + id.String(),
 	}
 
@@ -151,6 +152,7 @@ func CreateNewGame() *Game {
 	return gameOriginal
 }
 
+
 func CreateNewMatches(deep int) (*Tournament, []MatchesTreeForm) {
 
 	tourney := GetNewTournament()
@@ -161,6 +163,31 @@ func CreateNewMatches(deep int) (*Tournament, []MatchesTreeForm) {
 
 	return tourney, matches
 }
+
+func UpdateMatch(match *Match, organizeID uuid.UUID) {
+
+	const magicNumber = 42
+
+	endTime := match.StartTime.Add(magicNumber * time.Minute)
+	match.EndTime = &endTime
+
+	match.FirstTeamScore = rand.Intn(magicNumber)
+	match.SecondTeamScore = rand.Intn(magicNumber)
+
+	match.FirstTeamID = &CreateNewTeam().ID
+	match.SecondTeamID = &CreateNewTeam().ID
+
+	match.OrganizeID = organizeID
+}
+
+func ConvertToMatch(match *MatchesTreeForm, tourneyID uuid.UUID) *Match {
+	return &Match {
+		ID: match.ID,
+		StartTime: &match.StartTime,
+		TourneyID: tourneyID,
+	}
+}
+
 
 func GetNewOAuth(person *Person, scope int) *OAuth {
 	id, _ := uuid.NewV4()
@@ -180,6 +207,37 @@ func CreateNewOAuth(scope int) *OAuth {
 
 	return oauth
 }
+
+
+func GetNewPlayers(numberOfPlayers int) []*Player {
+
+	team := CreateNewTeam()
+
+	players := make([]*Player, numberOfPlayers)
+	for i := range players {
+		players[i] = &Player{
+			Nickname: GenerateLastName(),
+			TeamID: team.ID,
+			TeamName: team.Name,
+			PersonID: CreateNewPerson().ID,
+		}
+	}
+
+	return players
+}
+
+func CreateNewPlayers(numberOfPlayers int) []*Player {
+
+	players := GetNewPlayers(numberOfPlayers)
+	for _, player := range players {
+		player.TeamName = ""
+		db.AddPlayerInTeam(player)
+	}
+
+	return players
+}
+
+
 
 
 

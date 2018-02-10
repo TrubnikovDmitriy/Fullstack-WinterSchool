@@ -44,3 +44,37 @@ func TestMatchGetChild(t *testing.T) {
 	}
 }
 
+func TestUpdateMatch(t *testing.T)  {
+
+	tourney, _ := CreateNewMatches(3)
+	matchesArray, _ := db.GetTournamentGrid(tourney.ID)
+
+	matches := matchesArray.Array
+
+
+	for i := range matches {
+		UpdateMatch(&matches[i],tourney.OrganizeID)
+		upd, err := db.UpdateMatch(&matches[i])
+		if err != nil {
+			t.Fatalf("Can't update match \n%s", err)
+		}
+
+		if upd.EndTime == nil || !upd.EndTime.Equal(*matches[i].EndTime) {
+			t.Errorf("Time is not updated")
+		}
+		if upd.FirstTeamScore != matches[i].FirstTeamScore {
+			t.Errorf("First team's score is not updated")
+		}
+		if upd.SecondTeamScore != matches[i].SecondTeamScore {
+			t.Errorf("Second team's score is not updated")
+		}
+		if upd.FirstTeamID != matches[i].FirstTeamID {
+			t.Errorf("First team is not updated")
+		}
+		if upd.SecondTeamID != matches[i].SecondTeamID {
+			t.Errorf("Second team is not updated")
+		}
+	}
+
+}
+
