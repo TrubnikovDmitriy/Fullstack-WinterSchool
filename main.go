@@ -51,10 +51,6 @@ func init() {
 	router.POST("/v1/oauth/authorize", handlers.CreateToken)
 	router.GET("/v1/oauth/access", handlers.GetToken)
 	router.GET("/v1/oauth/refresh", handlers.RefreshToken)
-
-	// TODO delete test
-	router.GET("/test", database.Test)
-	router.GET("/test2", database.Test2)
 }
 
 func main() {
