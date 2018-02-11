@@ -4,6 +4,7 @@ import (
 	"os"
 	"encoding/json"
 	"time"
+	"log"
 )
 
 type Config struct {
@@ -43,7 +44,8 @@ type Redis struct {
 var ApplicationConfig *Config
 
 func init() {
-	ApplicationConfig = ReadConfig("/home/dmitriy/TPark/WinterFullstack/backend/application.cfg")
+	pwd := os.Getenv("PWD")
+	ApplicationConfig = ReadConfig(pwd + "/application.cfg")
 }
 
 func ReadConfig(path string) *Config {

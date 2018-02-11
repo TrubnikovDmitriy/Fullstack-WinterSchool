@@ -30,13 +30,15 @@ func CreateToken(ctx *fasthttp.RequestCtx) {
 	}
 
 	code := cache.CreateCode(&oauth)
-	if code != nil {
+	if code == nil {
 		err = &serv.ErrorCode {
 			Code: fasthttp.StatusInternalServerError,
 			Message: fasthttp.StatusMessage(fasthttp.StatusInternalServerError),
 		}
 		err.WriteAsJsonResponseTo(ctx)
+		return
 	}
+
 	ctx.Redirect(redirectURL + "?code=" + code.String(), fasthttp.StatusFound)
 }
 
@@ -186,9 +188,13 @@ func setTokenCookie(tokens models.Tokens, ctx *fasthttp.RequestCtx) {
 	accessCookie.SetKey(CookieAccess)
 	accessCookie.SetValue(tokens.AccessToken)
 	accessCookie.SetExpire(time.Now().AddDate(0, 1, 0))
+	accessCookie.SetPath("/")
+
 	refreshCookie.SetKey(CookieRefresh)
 	refreshCookie.SetValue(tokens.RefreshToken)
 	refreshCookie.SetExpire(time.Now().AddDate(0, 1, 0))
+	refreshCookie.SetPath("/")
+
 
 	ctx.Response.Header.SetCookie(&accessCookie)
 	ctx.Response.Header.SetCookie(&refreshCookie)
