@@ -13,16 +13,20 @@ pipeline {
                         echo 'Развернуть постгрес в докере №2'
                     }
                 }
-            }
-        }
-
-        stages {
-            stage('prepare config') {
-                steps {
-                    sh 'cp ./application.cfg' './tests/unit/'
+                stage('go-get') {
+                    steps {
+                        sh 'go get github.com/valyala/fasthttp'
+                        sh 'go get github.com/buaazp/fasthttprouter'
+                        sh 'go get github.com/jackc/pgx'
+                        sh 'go get github.com/satori/go.uuid'
+                        sh 'go get github.com/liderman/text-generator'
+                        sh 'go get github.com/dgrijalva/jwt-go'
+                        sh 'go get github.com/garyburd/redigo/redis'
+                    }
                 }
             }
         }
+
 
         stage('testing') {
             parallel {
