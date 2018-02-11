@@ -4,7 +4,6 @@ import (
 	"os"
 	"encoding/json"
 	"time"
-	"log"
 )
 
 type Config struct {

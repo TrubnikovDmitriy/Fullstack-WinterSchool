@@ -59,5 +59,4 @@ func init() {
 
 func main() {
 	fasthttp.ListenAndServe(":5554", router.Handler)
-	// андрей смирнов
 }
