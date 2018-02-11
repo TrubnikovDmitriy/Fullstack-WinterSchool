@@ -64,6 +64,21 @@ pipeline {
             }
         }
 
+        stage('create schema') {
+            parallel {
+                stage('schema-1') {
+                    steps {
+                        sh 'psql -h localhost -p 5433 -d db_test < ./migrations/V1__init.sql'
+                    }
+                }
+                stage('schema-2') {
+                    steps {
+                        sh 'psql -h localhost -p 5432 -d db_test < ./migrations/V1__init.sql'
+                    }
+                }
+            }
+        }
+
         stage('testing') {
             parallel {
 
