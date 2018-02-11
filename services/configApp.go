@@ -43,8 +43,7 @@ type Redis struct {
 var ApplicationConfig *Config
 
 func init() {
-	pwd := os.Getenv("PWD")
-	ApplicationConfig = ReadConfig(pwd + "/application.cfg")
+	ApplicationConfig = ReadConfig("application.cfg")
 }
 
 func ReadConfig(path string) *Config {
