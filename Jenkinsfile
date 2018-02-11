@@ -10,7 +10,7 @@ pipeline {
                 }
                 stage('shard-2') {
                     steps {
-                        echo 'Развернуть постгрес в докере №2'
+                        echo 'Развернуть постгрес в докере №1'
                     }
                 }
                 stage('go-get') {
@@ -24,6 +24,15 @@ pipeline {
                         sh 'go get github.com/garyburd/redigo/redis'
                     }
                 }
+                stage('prepare config') {
+                    steps {
+                        sh 'cp ./application.cfg ./tests/unit/'
+                        echo 'ls -la'
+                        echo 'ls -la ./tests'
+                        echo 'ls -la ./tests/unit'
+                    }
+                }
+
             }
         }
 
@@ -77,3 +86,4 @@ pipeline {
         }
     }
 }
+
