@@ -24,15 +24,6 @@ pipeline {
                         sh 'go get github.com/garyburd/redigo/redis'
                     }
                 }
-                stage('prepare config') {
-                    steps {
-                        sh 'cp ./application.cfg ./tests/unit/'
-                        echo 'ls -la'
-                        echo 'ls -la ./tests'
-                        echo 'ls -la ./tests/unit'
-                    }
-                }
-
             }
         }
 
