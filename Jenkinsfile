@@ -16,8 +16,8 @@ pipeline {
             }
         }
 
-        stage('prepare config') {
-            stage('copy') {
+        stages {
+            stage('prepare config') {
                 steps {
                     sh 'cp ./application.cfg' './tests/unit/'
                 }
@@ -72,3 +72,4 @@ pipeline {
             echo 'CI completed!'
         }
     }
+}
