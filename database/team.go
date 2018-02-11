@@ -127,7 +127,7 @@ func DeletePlayerFromTeam(player *models.Player) *serv.ErrorCode {
 	}
 
 	const deletePlayerFromTeam = "DeletePlayerFromTeam"
-	db := sharedKeyForWriteByID(player.ID)
+	db := sharedKeyForWriteByID(player.TeamID)
 	db.Prepare(deletePlayerFromTeam, "UPDATE players SET retire = TRUE WHERE id = $1")
 
 	_, err := db.Exec(deletePlayerFromTeam, player.ID)
