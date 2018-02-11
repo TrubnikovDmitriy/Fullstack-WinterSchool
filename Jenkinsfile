@@ -3,14 +3,19 @@ pipeline {
     stages {
         stage('prepare environment') {
             parallel {
-                stage('shard-1') {
+                stage('clear image-1') {
                     steps {
-                        sh 'docker run --rm --name my_postgres_1 -e POSTGRESQL_USER=jenkins -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db_test -p 5432:5432 centos/postgresql-96-centos7'
+                        sh 'docker rm -f my_postgres_1 || true'
                     }
                 }
-                stage('shard-2') {
+                stage('clear image-2') {
                     steps {
-                        sh 'docker run --rm --name my_postgres_2 -e POSTGRESQL_USER=jenkins -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db_test -p 5433:5432 centos/postgresql-96-centos7'
+                        sh 'docker rm -f my_postgres_2 || true'
+                    }
+                }
+                stage('whoami') {
+                    steps {
+                        sh 'whoami'
                     }
                 }
                 stage('go-get') {
@@ -27,6 +32,37 @@ pipeline {
             }
         }
 
+
+        stage('deploy postgres in docker') {
+            parallel {
+                stage('shard-1') {
+                    steps {
+                        sh 'docker run -d --name my_postgres_1 -e POSTGRESQL_USER=jenkins -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db_test -p 5432:5432 centos/postgresql-96-centos7'
+                    }
+                }
+                stage('shard-2') {
+                    steps {
+                        sh 'docker run -d --name my_postgres_2 -e POSTGRESQL_USER=jenkins -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db_test -p 5433:5432 centos/postgresql-96-centos7'
+                    }
+                }
+                stage('whoami') {
+                    steps {
+                        sh 'cat tests/unit/application.cfg'
+                    }
+                }
+                stage('go-get') {
+                    steps {
+                        sh 'go get github.com/valyala/fasthttp'
+                        sh 'go get github.com/buaazp/fasthttprouter'
+                        sh 'go get github.com/jackc/pgx'
+                        sh 'go get github.com/satori/go.uuid'
+                        sh 'go get github.com/liderman/text-generator'
+                        sh 'go get github.com/dgrijalva/jwt-go'
+                        sh 'go get github.com/garyburd/redigo/redis'
+                    }
+                }
+            }
+        }
 
         stage('testing') {
             parallel {
