@@ -5,12 +5,12 @@ pipeline {
             parallel {
                 stage('shard-1') {
                     steps {
-                        echo 'docker run --rm --name my_postgres_1 -e POSTGRESQL_USER=jenkins -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db_test -p 5432:5432 centos/postgresql-96-centos7'
+                        sh 'docker run --rm --name my_postgres_1 -e POSTGRESQL_USER=jenkins -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db_test -p 5432:5432 centos/postgresql-96-centos7'
                     }
                 }
                 stage('shard-2') {
                     steps {
-                        echo 'docker run --rm --name my_postgres_2 -e POSTGRESQL_USER=jenkins -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db_test -p 5433:5432 centos/postgresql-96-centos7'
+                        sh 'docker run --rm --name my_postgres_2 -e POSTGRESQL_USER=jenkins -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db_test -p 5433:5432 centos/postgresql-96-centos7'
                     }
                 }
                 stage('go-get') {
