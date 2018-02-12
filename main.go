@@ -48,7 +48,7 @@ func init() {
 	router.GET("/v1/app/refresh", handlers.ApplicationRefresh)
 
 	// Auth server
-	router.GET("/v1/oauth/authorize", handlers.CreateToken)
+	router.POST("/v1/oauth/authorize", handlers.CreateToken)
 	router.GET("/v1/oauth/access", handlers.GetToken)
 	router.GET("/v1/oauth/refresh", handlers.RefreshToken)
 }
