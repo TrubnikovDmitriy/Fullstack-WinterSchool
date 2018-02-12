@@ -57,12 +57,12 @@ pipeline {
             parallel {
                 stage('schema-1') {
                     steps {
-                        sh 'psql -h localhost -p 5433 -d db_test -U postgres < ./migrations/V1__init.sql || true'
+                        sh 'psql -h localhost -p 5433 -d db_test -w < ./migrations/V1__init.sql || true'
                     }
                 }
                 stage('schema-2') {
                     steps {
-                        sh 'psql -h localhost -p 5432 -d db_test < ./migrations/V1__init.sql || true'
+                        sh 'psql -h localhost -p 5432 -d db_test -w < ./migrations/V1__init.sql || true'
                     }
                 }
             }
