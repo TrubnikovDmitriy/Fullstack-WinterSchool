@@ -60,11 +60,7 @@ pipeline {
                         sh 'psql -h localhost -p 5433 -d db_test -U postgres < ./migrations/V1__init.sql || true'
                     }
                 }
-            }
-        }
-        stage('create schema') {
-            parallel {
-                stage('schema-1') {
+                stage('schema-2') {
                     steps {
                         sh 'psql -h localhost -p 5432 -d db_test < ./migrations/V1__init.sql || true'
                     }
