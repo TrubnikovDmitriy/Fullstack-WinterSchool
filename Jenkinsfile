@@ -13,9 +13,9 @@ pipeline {
                         sh 'docker rm -f my_postgres_2 || true'
                     }
                 }
-                stage('whoami') {
+                stage('generalSCM') {
                     steps {
-                        sh 'whoami'
+                        git 'https://github.com/TrubnikovDmitriy/Fullstack-WinterSchool.git'
                     }
                 }
                 stage('go-get') {
@@ -57,7 +57,7 @@ pipeline {
             parallel {
                 stage('schema-1') {
                     steps {
-                        sh 'psql -h localhost -p 5433 -d db_test -w < ./migrations/V1__init.sql || true'
+                        sh 'psql -h localhost -p 8050 -d db_test -w < ./migrations/V1__init.sql || true'
                     }
                 }
                 stage('schema-2') {
