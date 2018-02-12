@@ -5,7 +5,6 @@ import (
 	"../services"
 	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx"
-	"log"
 )
 
 func Auth(oauth *models.OAuth) *serv.ErrorCode {
@@ -26,8 +25,7 @@ func Auth(oauth *models.OAuth) *serv.ErrorCode {
 		return serv.NewNotFound()
 	}
 	if err != nil {
-		log.Print(err)
-		return serv.NewServerError(err)
+		return checkError(err, db)
 	}
 
 	oauth.PersonID = castUUID(pgUUID)
@@ -37,8 +35,7 @@ func Auth(oauth *models.OAuth) *serv.ErrorCode {
 
 	err = db.QueryRow(getInfoForAuth, oauth.PersonID).Scan(&oauth.FirstName, &oauth.LastName)
 	if err != nil {
-		log.Print(err)
-		return serv.NewServerError(err)
+		return checkError(err, db)
 	}
 
 	return nil

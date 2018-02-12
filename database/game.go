@@ -20,7 +20,7 @@ func GetGameByID(id uuid.UUID) (*models.Game, *serv.ErrorCode) {
 	game := models.Game{ID: id}
 	err := db.QueryRow(selectGameByID, id).Scan(&game.Title, &game.About)
 	if err != nil {
-		return nil, checkError(err)
+		return nil, checkError(err, db)
 	}
 
 	return &game, nil
@@ -52,7 +52,7 @@ func GetGames(limit int, page int) (*models.Games, *serv.ErrorCode)  {
 		if err != nil {
 			log.Print(err)
 			rows.Close()
-			return nil, serv.NewServerError(err)
+			return nil, checkError(err, db)
 		}
 
 		var gameID pgtype.UUID
@@ -111,7 +111,7 @@ func CreateGame(game *models.Game) *serv.ErrorCode {
 
 	_, err = master.Exec(createNewGame, game.ID, game.Title, game.About)
 	if err != nil {
-		return serv.NewServerError(err)
+		return checkError(err, master)
 	}
 
 	return nil

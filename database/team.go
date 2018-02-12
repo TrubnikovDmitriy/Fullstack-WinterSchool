@@ -7,7 +7,6 @@ import (
 	"github.com/satori/go.uuid"
 	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx"
-	"log"
 )
 
 
@@ -20,7 +19,7 @@ func GetTeamByID(teamID uuid.UUID) (*models.Team, *serv.ErrorCode) {
 	team := models.Team{ID: teamID}
 	err := db.QueryRow(selectTeamByID, teamID).Scan(&team.Name, &team.About)
 	if err != nil {
-		return nil, checkError(err)
+		return nil, checkError(err, db)
 	}
 
 	return &team, nil
@@ -56,7 +55,7 @@ func CreateTeam(team *models.Team) *serv.ErrorCode {
 	// Добавление
 	_, err = master.Exec(createTeam, team.ID, team.Name, team.About, team.CoachID, team.CoachName)
 	if err != nil {
-		return serv.NewServerError(err)
+		return checkError(err, master)
 	}
 
 	return nil
@@ -81,8 +80,7 @@ func AddPlayerInTeam(player *models.Player) *serv.ErrorCode {
 		return serv.NewBadRequest("Such person does not exist")
 	}
 	if err != nil {
-		log.Print(err)
-		return serv.NewServerError(err)
+		return checkError(err, db)
 	}
 
 
@@ -103,8 +101,7 @@ func AddPlayerInTeam(player *models.Player) *serv.ErrorCode {
 		return serv.NewBadRequest("Such person does not exist")
 	}
 	if err != nil {
-		log.Print(err)
-		return serv.NewServerError(err)
+		return checkError(err, master)
 	}
 
 
@@ -113,11 +110,11 @@ func AddPlayerInTeam(player *models.Player) *serv.ErrorCode {
 	_, err = master.Exec(addPlayerInTeam, player.ID, player.PersonID,
 		player.Nickname, player.TeamID, player.TeamName)
 	if err != nil {
-		return serv.NewServerError(err)
+		return checkError(err, master)
 	}
 
 
-	return nil;
+	return nil
 }
 
 func DeletePlayerFromTeam(player *models.Player) *serv.ErrorCode {
@@ -132,8 +129,7 @@ func DeletePlayerFromTeam(player *models.Player) *serv.ErrorCode {
 
 	_, err := db.Exec(deletePlayerFromTeam, player.ID)
 	if err != nil {
-		log.Print(err)
-		return serv.NewServerError(err)
+		return checkError(err, db)
 	}
 
 	return nil

@@ -9,6 +9,8 @@ import (
 	"github.com/satori/go.uuid"
 	"github.com/pkg/errors"
 	"github.com/jackc/pgx/pgtype"
+	"crypto/md5"
+	"strings"
 )
 
 var (
@@ -53,7 +55,7 @@ func initPgConnPool(config serv.DataBase) *pgx.ConnPool {
 
 
 
-func checkError(err error) *serv.ErrorCode {
+func checkError(err error, suspicion *pgx.ConnPool) *serv.ErrorCode {
 	if err == pgx.ErrNoRows {
 		return &serv.ErrorCode {
 			Code:    fasthttp.StatusNotFound,
@@ -61,11 +63,23 @@ func checkError(err error) *serv.ErrorCode {
 		}
 	}
 	log.Print(err)
-	return &serv.ErrorCode {
-		Code: fasthttp.StatusInternalServerError,
-		Message: fasthttp.StatusMessage(fasthttp.StatusInternalServerError),
+	if err == pgx.ErrDeadConn || strings.Contains(err.Error(), "connection refused") {
+		mark: for i := range masterConnectionPool {
+			if masterConnectionPool[i] == suspicion {
+				masterConnectionPool[i] = slaveConnectionPool[i]
+				log.Printf("Master replaced by slave (%d)", i)
+				break mark
+			}
+			if slaveConnectionPool[i] == suspicion {
+				slaveConnectionPool[i] = masterConnectionPool[i]
+				log.Printf("Slave replaced by master (%d)", i)
+				break mark
+			}
+		}
 	}
+	return serv.NewServerError(err)
 }
+
 
 func sharedKeyForWriteByID(uuid uuid.UUID) *pgx.ConnPool {
 	return masterConnectionPool[int(uuid[0]) % serv.GetConfig().NumberOfShards]
@@ -75,6 +89,19 @@ func sharedKeyForReadByID(uuid uuid.UUID) *pgx.ConnPool {
 	dbID := int(uuid[0]) % serv.GetConfig().NumberOfShards
 	return choiceMasterSlave(masterConnectionPool[dbID], slaveConnectionPool[dbID])
 }
+
+
+func sharedKeyForWriteByMail(email string) *pgx.ConnPool {
+	shardKey := md5.New().Sum([]byte(email))[0]
+	return masterConnectionPool[int(shardKey) % serv.GetConfig().NumberOfShards]
+}
+
+func sharedKeyForReadByMail(email string) *pgx.ConnPool {
+	shardKey := md5.New().Sum([]byte(email))[0]
+	dbID := int(shardKey) % serv.GetConfig().NumberOfShards
+	return choiceMasterSlave(masterConnectionPool[dbID], slaveConnectionPool[dbID])
+}
+
 
 func choiceMasterSlave(masterN *pgx.ConnPool, slaveN *pgx.ConnPool) *pgx.ConnPool {
 	if rand.Int31n(serv.GetConfig().SlaveToMasterReadRatio + 1) == 0 {

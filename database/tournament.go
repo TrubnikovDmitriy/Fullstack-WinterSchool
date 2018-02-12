@@ -7,7 +7,6 @@ import (
 	"github.com/satori/go.uuid"
 	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx"
-	"log"
 )
 
 
@@ -23,7 +22,7 @@ func GetTourneyByID(id uuid.UUID) (*models.Tournament, *serv.ErrorCode) {
 		Scan(&tourney.ID, &tourney.Title, &tourney.Started, &tourney.Ended, &tourney.About)
 
 	if err != nil {
-		return nil, checkError(err)
+		return nil, checkError(err, db)
 	}
 
 	return &tourney, nil;
@@ -46,7 +45,7 @@ func CreateTournament(tourney *models.Tournament) *serv.ErrorCode {
 		return serv.NewBadRequest("Such game does not exist")
 	}
 	if pgErr != nil {
-		return serv.NewServerError(pgErr)
+		return checkError(pgErr, db)
 	}
 
 
@@ -73,7 +72,7 @@ func CreateTournament(tourney *models.Tournament) *serv.ErrorCode {
 						tourney.Started, tourney.Ended, tourney.About,
 						tourney.OrganizeID, tourney.OrganizeName, tourney.GameID)
 	if err != nil {
-		return checkError(err)
+		return checkError(err, master)
 	}
 
 
@@ -88,10 +87,9 @@ func CreateTournament(tourney *models.Tournament) *serv.ErrorCode {
 		"INSERT INTO game_tourney(game_id, tourney_id, started, title) VALUES ($1, $2, $3, $4);"
 	_, err = db.Exec(createGameTourneyRow, tourney.GameID, tourney.ID, tourney.Started, tourney.Title)
 	if err != nil {
-		log.Print(err)
 		// Если вдруг что-то пошло не так
 		master.Exec("DELETE FROM tournaments WHERE id = $1", tourney.ID)
-		return serv.NewServerError(err)
+		return checkError(err, master)
 	}
 
 
@@ -118,8 +116,7 @@ func GetTournamentsByGameID(gameID uuid.UUID, page int, limit int) (*[]models.To
 	rows, err := db.Query(getGamesByGameID, gameID, limit, offset)
 	defer rows.Close()
 	if err != nil {
-		log.Print(err)
-		return nil, serv.NewServerError(err)
+		return nil, checkError(err, db)
 	}
 
 	tourneys := make([]models.Tournament, 0, limit)
@@ -128,8 +125,7 @@ func GetTournamentsByGameID(gameID uuid.UUID, page int, limit int) (*[]models.To
 		tourney := models.Tournament{}
 		err = rows.Scan(&tourneyID, &tourney.Started, &tourney.Title)
 		if err != nil {
-			log.Print(err)
-			return nil, serv.NewServerError(err)
+			return nil, checkError(err, db)
 		}
 		tourney.ID = castUUID(tourneyID)
 		tourney.GenerateLinks()
@@ -137,4 +133,27 @@ func GetTournamentsByGameID(gameID uuid.UUID, page int, limit int) (*[]models.To
 	}
 
 	return &tourneys, nil
+}
+
+func UpdateTournament(newTourney *models.Tournament) (*models.Tournament, *serv.ErrorCode) {
+
+	if newTourney.ID == uuid.Nil {
+		return nil, serv.NewBadRequest("Tounament's ID is missed")
+	}
+
+	tourney, errCode := GetTourneyByID(newTourney.ID)
+	if errCode != nil {
+		return nil, errCode
+	}
+
+	const updateAboutTourney = "UpdateAboutTourney"
+	db := sharedKeyForReadByID(tourney.ID)
+	db.Prepare(updateAboutTourney, "UPDATE tournaments SET (about)=($1) WHERE id = $2;")
+	_, err := db.Exec(updateAboutTourney, newTourney.About, newTourney.ID)
+	if err != nil {
+		return nil, checkError(err, db)
+	}
+
+	tourney.About = newTourney.About
+	return tourney, nil
 }

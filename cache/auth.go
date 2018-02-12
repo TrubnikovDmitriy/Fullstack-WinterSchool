@@ -16,10 +16,9 @@ func CreateCode(oauth *models.OAuth) *uuid.UUID {
 
 	deleteTokens(oauth.PersonID)
 
-	conn := redisPool.Get()
-	defer conn.Close()
-
 	code, _ := uuid.NewV4()
+	conn := sharedKeyByString(code.String()).Get()
+	defer conn.Close()
 
 	jsonAuth, err := json.Marshal(oauth)
 	if err != nil {
@@ -43,7 +42,7 @@ func CreateCode(oauth *models.OAuth) *uuid.UUID {
 
 func ActivateCode(code *uuid.UUID) (newAccess *string, newRefresh *string) {
 
-	conn := redisPool.Get()
+	conn := sharedKeyByString(code.String()).Get()
 	defer conn.Close()
 
 	personUUID, err := redis.String(conn.Do("HGET", "code:" + code.String(), "person_id"))
@@ -66,8 +65,15 @@ func ActivateCode(code *uuid.UUID) (newAccess *string, newRefresh *string) {
 
 	// Формируем две новые записи: (refresh:uuid, models.OAuth), (person_id:uuid, refresh_uuid)
 	newRefresh = generateRefreshToken()
-	redis.String(conn.Do("SET", "person_id:" + personUUID, *newRefresh))
-	redis.String(conn.Do("SET", "refresh:" + *newRefresh, access))
+
+	connPersonID := sharedKeyByString(personUUID).Get()
+	defer connPersonID.Close()
+	connRefreshID := sharedKeyByString(*newRefresh).Get()
+	defer connRefreshID.Close()
+
+
+	redis.String(connPersonID.Do("SET", "person_id:" + personUUID, *newRefresh))
+	redis.String(connRefreshID.Do("SET", "refresh:" + *newRefresh, access))
 
 	// На основе модели генерируем новый access token
 	auth := unmarshalAuth(access)
@@ -76,23 +82,28 @@ func ActivateCode(code *uuid.UUID) (newAccess *string, newRefresh *string) {
 
 func RefreshToken(refreshToken string) (newAccess *string, newRefresh *string) {
 
-	conn := redisPool.Get()
-	defer conn.Close()
+	connRefreshID := sharedKeyByString(refreshToken).Get()
+	defer connRefreshID.Close()
 
 	// Получить AccessToken и сразу удалить запись
-	access, err := redis.String(conn.Do("GET", "refresh:" + refreshToken))
+	access, err := redis.String(connRefreshID.Do("GET", "refresh:" + refreshToken))
 	if err != nil {
 		return nil, nil
 	}
-	redis.String(conn.Do("DEL", "refresh:" + refreshToken))
+	redis.String(connRefreshID.Do("DEL", "refresh:" + refreshToken))
 
 	// Разобарть Access Token
 	oauth := unmarshalAuth(access)
 	newRefresh = generateRefreshToken()
 
+	newConnRefreshID := sharedKeyByString(*newRefresh).Get()
+	defer newConnRefreshID.Close()
+	connPersonID := sharedKeyByString(oauth.PersonID.String()).Get()
+	defer connPersonID.Close()
+
 	// Обновить и создать записи
-	redis.String(conn.Do("SET", "person_id:" + oauth.PersonID.String(), *newRefresh))
-	redis.String(conn.Do("SET", "refresh:" + *newRefresh, access))
+	redis.String(connPersonID.Do("SET", "person_id:" + oauth.PersonID.String(), *newRefresh))
+	redis.String(newConnRefreshID.Do("SET", "refresh:" + *newRefresh, access))
 
 	return generateAccessToken(oauth), newRefresh
 }
@@ -100,13 +111,13 @@ func RefreshToken(refreshToken string) (newAccess *string, newRefresh *string) {
 
 func deleteTokens(personID uuid.UUID) {
 
-	conn := redisPool.Get()
-	defer conn.Close()
+	connPersonID := sharedKeyByString(personID.String()).Get()
+	defer connPersonID.Close()
 
-	refresh, err := redis.String(conn.Do("GET", "person_id:" + personID.String()))
+	refresh, err := redis.String(connPersonID.Do("GET", "person_id:" + personID.String()))
 	if err == nil {
-		redis.String(conn.Do("DEL", "person_id:" + personID.String()))
-		redis.String(conn.Do("DEL", "refresh:" + refresh))
+		redis.String(connPersonID.Do("DEL", "person_id:" + personID.String()))
+		redis.String(connPersonID.Do("DEL", "refresh:" + refresh))
 	}
 }
 

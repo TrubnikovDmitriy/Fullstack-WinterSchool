@@ -82,7 +82,7 @@ func TestGetFewPlayer(t *testing.T) {
 	}
 
 	if len(players) != numberOfPlayers {
-		t.Fatalf("Returning wrong number of players (%d instead of %d)",
+		t.Fatalf("Returning wrong number of players (%d instead %d)",
 			len(players), numberOfPlayers)
 	}
 }

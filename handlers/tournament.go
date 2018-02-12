@@ -77,6 +77,7 @@ func CreateTournament(ctx *fasthttp.RequestCtx) {
 	}
 }
 
+
 // GET /v1/tourney/{id}/matches
 func GetTournamentGrid(ctx *fasthttp.RequestCtx) {
 
@@ -91,5 +92,29 @@ func GetTournamentGrid(ctx *fasthttp.RequestCtx) {
 		ctx.SetStatusCode(err.Code)
 	} else {
 		grid.WriteAsJsonResponseTo(ctx, fasthttp.StatusOK)
+	}
+}
+
+
+// POST /v1/tourney
+func UpdateTournament(ctx *fasthttp.RequestCtx) {
+
+	_, err := GetClaimsFromCookie(ctx)
+	if err != nil {
+		err.WriteAsJsonResponseTo(ctx)
+		return
+	}
+
+	tournament := new(models.Tournament)
+	json.Unmarshal(ctx.PostBody(), tournament)
+
+	//tournament.OrganizeID = uuid.FromStringOrNil(claims["person_id"].(string))
+	//tournament.OrganizeName = claims["first_name"].(string) + " " + claims["last_name"].(string)
+
+	tournament, err = database.UpdateTournament(tournament)
+	if err != nil {
+		err.WriteAsJsonResponseTo(ctx)
+	} else {
+		tournament.WriteAsJsonResponseTo(ctx, fasthttp.StatusCreated)
 	}
 }

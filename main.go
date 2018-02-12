@@ -35,7 +35,7 @@ func init() {
 	router.GET("/v1/tourney/:tourney_id", handlers.GetTournamentByID)
 	router.GET("/v1/tourney/:tourney_id/matches", handlers.GetTournamentGrid)
 	router.POST("/v1/tourney", handlers.CreateTournament)
-	//router.PUT("/v1/tourney/:tourney_id", handlers.UpdateTournament)
+	router.PUT("/v1/tourney/:tourney_id", handlers.UpdateTournament)
 
 	// games
 	router.GET("/v1/games/:game_id/tournaments", handlers.GetTournamentsByGameID)
@@ -51,13 +51,8 @@ func init() {
 	router.GET("/v1/oauth/authorize", handlers.CreateToken)
 	router.GET("/v1/oauth/access", handlers.GetToken)
 	router.GET("/v1/oauth/refresh", handlers.RefreshToken)
-
-	// TODO delete test
-	router.GET("/test", database.Test)
-	router.GET("/test2", database.Test2)
 }
 
 func main() {
-	fasthttp.ListenAndServe(":5554", router.Handler)
-	// андрей смирнов
+	fasthttp.ListenAndServe("localhost:5554", router.Handler)
 }

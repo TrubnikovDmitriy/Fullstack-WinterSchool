@@ -6,7 +6,6 @@ import (
 	"github.com/jackc/pgx/pgtype"
 	"../services"
 	"../models"
-	"log"
 )
 
 func GetMatchByID(tourneyID uuid.UUID, matchID uuid.UUID) (*models.Match, *serv.ErrorCode) {
@@ -19,21 +18,21 @@ func GetMatchByID(tourneyID uuid.UUID, matchID uuid.UUID) (*models.Match, *serv.
 			"start_time, end_time, link, " +
 			"prev_match_id_1, prev_match_id_2, " +
 			"next_match_id, organize_id " +
-			"FROM matches WHERE id = $1")
+			"FROM matches WHERE id = $1 AND tourn_id = $2")
 
 
 	match := models.Match{ ID: matchID, TourneyID: tourneyID }
 	pgtypeUUID := [6]pgtype.UUID{}
 	commonUUID := [6]*uuid.UUID{}
 
-	row := db.QueryRow(selectMatchByID, matchID)
+	row := db.QueryRow(selectMatchByID, matchID, tourneyID)
 	err := row.Scan(&pgtypeUUID[0], &pgtypeUUID[1],
 					&match.FirstTeamScore, &match.SecondTeamScore,
 					&match.StartTime, &match.EndTime, &match.Link,
 					&pgtypeUUID[2], &pgtypeUUID[3],
 					&pgtypeUUID[4], &pgtypeUUID[5])
 	if err != nil {
-		return nil, checkError(err)
+		return nil, checkError(err, db)
 	} else {
 		for i, pgUUID := range pgtypeUUID {
 			if pgUUID.Status != pgtype.Null {
@@ -81,12 +80,12 @@ func CreateMatches(matches []models.Match, tourney *models.Tournament) *serv.Err
 
 	err := batch.Send(context.Background(), nil)
 	if err != nil {
-		return checkError(err)
+		return checkError(err, master)
 	}
 
 	_, err = batch.ExecResults()
 	if err != nil {
-		return checkError(err)
+		return checkError(err, master)
 	}
 	return nil
 }
@@ -109,7 +108,7 @@ func GetTournamentGrid(id uuid.UUID) (*models.MatchesArrayForm, *serv.ErrorCode)
 	rows, err := db.Query(selectGridByTourneyID, id)
 	defer rows.Close()
 	if err != nil {
-		return nil, checkError(err)
+		return nil, checkError(err, db)
 	}
 
 	for rows.Next() {
@@ -123,7 +122,7 @@ func GetTournamentGrid(id uuid.UUID) (*models.MatchesArrayForm, *serv.ErrorCode)
 			&pgtypeUUID[0], &pgtypeUUID[1], &pgtypeUUID[2],
 		)
 		if err != nil {
-			return nil, checkError(err)
+			return nil, checkError(err, db)
 		}
 
 		for i, pgUUID := range pgtypeUUID {
@@ -147,7 +146,7 @@ func GetTournamentGrid(id uuid.UUID) (*models.MatchesArrayForm, *serv.ErrorCode)
 
 func UpdateMatch(upd *models.Match) (*models.Match, *serv.ErrorCode) {
 
-	master := sharedKeyForWriteByID(upd.ID)
+	master := sharedKeyForWriteByID(upd.TourneyID)
 
 	// Извлечение из БД матча
 	match, errCode := GetMatchByID(upd.TourneyID, upd.ID)
@@ -170,12 +169,12 @@ func UpdateMatch(upd *models.Match) (*models.Match, *serv.ErrorCode) {
 	const updateMatch = "UpdateMatch"
 	master.Prepare(updateMatch,
 		"UPDATE matches SET(team_id_1, team_id_2, team_score_1, team_score_2, " +
-			"end_time, link) = ($1, $2, $3, $4, $5, $6) WHERE id = $7;")
+			"end_time, link) = ($1, $2, $3, $4, $5, $6) WHERE id = $7 AND tourn_id = $8;")
 	_, err := master.Exec(updateMatch, match.FirstTeamID, match.SecondTeamID,
-		match.FirstTeamScore, match.SecondTeamScore, match.EndTime, match.Link, match.ID)
+				match.FirstTeamScore, match.SecondTeamScore, match.EndTime,
+				match.Link, match.ID, match.TourneyID)
 	if err != nil {
-		log.Print(err)
-		return nil, serv.NewServerError(err)
+		return nil, checkError(err, master)
 	}
 
 

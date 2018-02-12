@@ -74,6 +74,7 @@ func CreateNewTournament() *Tournament {
 	tourneyForDatabase := *originalTourney
 	db.CreateTournament(&tourneyForDatabase)
 
+	originalTourney.ID = tourneyForDatabase.ID
 	return originalTourney
 }
 

@@ -22,7 +22,7 @@ func GetPlayerByID(teamID uuid.UUID, playerID uuid.UUID) (*models.Player, *serv.
 	err := db.QueryRow(selectPlayerByID, player.ID).
 		Scan(&personID, &player.Nickname, &player.TeamName, &player.Retire)
 	if err != nil {
-		return nil, checkError(err)
+		return nil, checkError(err, db)
 	}
 	player.PersonID = castUUID(personID)
 
@@ -41,7 +41,7 @@ func GetPlayersOfTeam(teamID uuid.UUID) ([]*models.Player, *serv.ErrorCode) {
 	defer rows.Close()
 
 	if err != nil {
-		return nil, checkError(err)
+		return nil, checkError(err, db)
 	}
 
 	var players []*models.Player

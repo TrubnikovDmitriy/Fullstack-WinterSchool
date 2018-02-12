@@ -7,8 +7,6 @@ import (
 	"../services"
 	"../models"
 	"github.com/jackc/pgx"
-	"log"
-	"crypto/md5"
 )
 
 func CreatePerson(person *models.Person) *serv.ErrorCode {
@@ -33,8 +31,7 @@ func CreatePerson(person *models.Person) *serv.ErrorCode {
 		}
 	}
 	if err != pgx.ErrNoRows {
-		log.Print(err)
-		return serv.NewServerError(err)
+		return checkError(err, authDB)
 	}
 
 	person.ID = getID()
@@ -51,16 +48,14 @@ func CreatePerson(person *models.Person) *serv.ErrorCode {
 
 	_, err = personDB.Exec(insertPerson, person.ID, person.FirstName, person.LastName, person.About)
 	if err != nil {
-		log.Print(err)
-		return serv.NewServerError(err)
+		return checkError(err, personDB)
 	}
 
 	_, err = authDB.Exec(insertAuth, person.Email, serv.PasswordHashing(person.Password), person.ID)
 	person.Password = ""
 	if err != nil {
-		log.Print(err)
 		personDB.Exec("DELETE FROM persons WHERE id=$1", person.ID)
-		return serv.NewServerError(err)
+		return checkError(err, personDB)
 	}
 
 	return nil
@@ -77,20 +72,8 @@ func GetPerson(id uuid.UUID) (*models.Person, *serv.ErrorCode) {
 	err := db.QueryRow(selectPersonByID, id).
 		Scan(&person.FirstName, &person.LastName, &person.About)
 	if err != nil {
-		return nil, checkError(err)
+		return nil, checkError(err, db)
 	}
 
 	return &person, nil
-}
-
-
-func sharedKeyForWriteByMail(email string) *pgx.ConnPool {
-	shardKey := md5.New().Sum([]byte(email))[0]
-	return masterConnectionPool[int(shardKey) % serv.GetConfig().NumberOfShards]
-}
-
-func sharedKeyForReadByMail(email string) *pgx.ConnPool {
-	shardKey := md5.New().Sum([]byte(email))[0]
-	dbID := int(shardKey) % serv.GetConfig().NumberOfShards
-	return choiceMasterSlave(masterConnectionPool[dbID], slaveConnectionPool[dbID])
 }

@@ -327,6 +327,20 @@ func TestGetTournamentsByGameIDWithSecondPage(t *testing.T) {
 }
 
 
+func TestUpdateTournament(t *testing.T) {
+
+	tourney := CreateNewTournament()
+
+	const updatedText = "New text about"
+	tourney.About = updatedText
+	updTourney, err := db.UpdateTournament(tourney)
+	if err != nil {
+		t.Fatalf("Can't update tournament:\n%s", err)
+	}
+	if updTourney.About != updatedText {
+		t.Errorf("Update is worng (%s instead %s)", updTourney.About, updatedText)
+	}
+}
 
 
 
