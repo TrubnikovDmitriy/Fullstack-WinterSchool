@@ -37,28 +37,17 @@ pipeline {
             parallel {
                 stage('shard-1') {
                     steps {
-                        sh 'docker run -d --name my_postgres_1 -e POSTGRESQL_USER=jenkins -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db_test -e POSTGRESQL_MIGRATION_IGNORE_ERRORS=yes -p 5432:5432 centos/postgresql-96-centos7'
+                        sh 'docker run -d --name my_postgres_1 -e POSTGRESQL_USER=jenkins -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db_test -p 5432:5432 centos/postgresql-96-centos7'
                     }
                 }
                 stage('shard-2') {
                     steps {
-                        sh 'docker run -d --name my_postgres_2 -e POSTGRESQL_USER=jenkins -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db_test -e POSTGRESQL_MIGRATION_IGNORE_ERRORS=yes -p 5433:5432 centos/postgresql-96-centos7'
+                        sh 'docker run -d --name my_postgres_2 -e POSTGRESQL_USER=jenkins -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db_test -p 5433:5432 centos/postgresql-96-centos7'
                     }
                 }
-                stage('whoami') {
+                stage('application config') {
                     steps {
-                        sh 'cat tests/unit/application.cfg'
-                    }
-                }
-                stage('go-get') {
-                    steps {
-                        sh 'go get github.com/valyala/fasthttp'
-                        sh 'go get github.com/buaazp/fasthttprouter'
-                        sh 'go get github.com/jackc/pgx'
-                        sh 'go get github.com/satori/go.uuid'
-                        sh 'go get github.com/liderman/text-generator'
-                        sh 'go get github.com/dgrijalva/jwt-go'
-                        sh 'go get github.com/garyburd/redigo/redis'
+                        sh 'cp ./application.cfg tests/unit/application.cfg'
                     }
                 }
             }
@@ -69,11 +58,6 @@ pipeline {
                 stage('schema-1') {
                     steps {
                         sh 'psql -h localhost -p 5433 -d db_test < ./migrations/V1__init.sql'
-                    }
-                }
-                stage('schema-2') {
-                    steps {
-                        sh 'psql -h localhost -p 5432 -d db_test < ./migrations/V1__init.sql'
                     }
                 }
             }
@@ -88,9 +72,21 @@ pipeline {
                     }
                 }
 
+                stage('auth_test') {
+                    steps {
+                        sh 'go test ./tests/unit/match_test.go -v'
+                    }
+                }
+
                 stage('game_test') {
                     steps {
                         sh 'go test ./tests/unit/game_test.go -v'
+                    }
+                }
+
+                stage('MatchTreeForm_test') {
+                    steps {
+                        sh 'go test ./tests/unit/MatchTreeForm_test.go -v'
                     }
                 }
 
@@ -100,7 +96,7 @@ pipeline {
                     }
                 }
 
-                stage('touney_test') {
+                stage('tourney_test') {
                     steps {
                         sh 'go test ./tests/unit/tournament_test.go -v'
                     }
